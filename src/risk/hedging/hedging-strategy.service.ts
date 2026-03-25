@@ -14,10 +14,15 @@ export class HedgingStrategyService {
   ) {}
 
   async createHedgingStrategy(hedgingDto: HedgingStrategyDto): Promise<object> {
-    this.logger.log(`Creating hedging strategy for portfolio: ${hedgingDto.portfolioId}`);
+    this.logger.log(
+      `Creating hedging strategy for portfolio: ${hedgingDto.portfolioId}`,
+    );
 
     const strategy = await this.generateOptimalHedgingStrategy(hedgingDto);
-    const effectiveness = await this.calculateHedgingEffectiveness(hedgingDto, strategy);
+    const effectiveness = await this.calculateHedgingEffectiveness(
+      hedgingDto,
+      strategy,
+    );
     const cost = await this.calculateHedgingCost(strategy);
 
     const hedgingStrategy = {
@@ -31,26 +36,38 @@ export class HedgingStrategyService {
     };
 
     // Update risk data with hedging strategy
-    await this.updateRiskDataWithHedgingStrategy(hedgingDto.portfolioId, hedgingStrategy);
+    await this.updateRiskDataWithHedgingStrategy(
+      hedgingDto.portfolioId,
+      hedgingStrategy,
+    );
 
-    this.logger.log(`Hedging strategy created for portfolio: ${hedgingDto.portfolioId}, Expected risk reduction: ${hedgingStrategy.riskReduction * 100}%`);
+    this.logger.log(
+      `Hedging strategy created for portfolio: ${hedgingDto.portfolioId}, Expected risk reduction: ${hedgingStrategy.riskReduction * 100}%`,
+    );
 
     return hedgingStrategy;
   }
 
-  private async generateOptimalHedgingStrategy(hedgingDto: HedgingStrategyDto): Promise<object> {
-    const { portfolioId, hedgeRatio, instrument, maturity, customParameters } = hedgingDto;
+  private async generateOptimalHedgingStrategy(
+    hedgingDto: HedgingStrategyDto,
+  ): Promise<object> {
+    const { portfolioId, hedgeRatio, instrument, maturity, customParameters } =
+      hedgingDto;
 
     // Determine optimal hedging instruments based on portfolio characteristics
     const portfolioProfile = await this.getPortfolioProfile(portfolioId);
-    
+
     const strategy = {
-      primaryInstrument: instrument || this.selectOptimalInstrument(portfolioProfile),
-      hedgeRatio: hedgeRatio || this.calculateOptimalHedgeRatio(portfolioProfile),
+      primaryInstrument:
+        instrument || this.selectOptimalInstrument(portfolioProfile),
+      hedgeRatio:
+        hedgeRatio || this.calculateOptimalHedgeRatio(portfolioProfile),
       maturity: maturity || this.selectOptimalMaturity(portfolioProfile),
-      secondaryInstruments: await this.selectSecondaryInstruments(portfolioProfile),
+      secondaryInstruments:
+        await this.selectSecondaryInstruments(portfolioProfile),
       dynamicAdjustment: true,
-      rebalancingFrequency: this.calculateRebalancingFrequency(portfolioProfile),
+      rebalancingFrequency:
+        this.calculateRebalancingFrequency(portfolioProfile),
       customParameters: customParameters || {},
     };
 
@@ -74,7 +91,7 @@ export class HedgingStrategyService {
     // Select optimal hedging instrument based on portfolio profile
     const volatility = portfolioProfile['volatility'];
     const liquidity = portfolioProfile['liquidity'];
-    
+
     if (volatility > 0.25) {
       return 'options'; // High volatility - use options for downside protection
     } else if (liquidity === 'high') {
@@ -88,69 +105,85 @@ export class HedgingStrategyService {
     // Calculate optimal hedge ratio (0-1)
     const volatility = portfolioProfile['volatility'];
     const size = portfolioProfile['size'];
-    
+
     // Higher volatility and larger size warrant higher hedge ratios
     const baseRatio = 0.5;
     const volatilityAdjustment = Math.min(volatility * 2, 0.3);
     const sizeAdjustment = Math.min(Math.log(size / 1000000) / 10, 0.2);
-    
+
     return Math.min(0.95, baseRatio + volatilityAdjustment + sizeAdjustment);
   }
 
   private selectOptimalMaturity(portfolioProfile: object): number {
     // Select optimal maturity in days
     const duration = portfolioProfile['duration'];
-    
+
     // Match hedge maturity to portfolio duration
     return Math.max(30, Math.min(365, duration * 30));
   }
 
-  private async selectSecondaryInstruments(portfolioProfile: object): Promise<string[]> {
+  private async selectSecondaryInstruments(
+    portfolioProfile: object,
+  ): Promise<string[]> {
     // Select additional hedging instruments for diversification
-    const instruments = [];
-    
+    const instruments: string[] = [];
+
     if (portfolioProfile['currencyExposure'].length > 1) {
       instruments.push('currency forwards');
     }
-    
+
     if (portfolioProfile['commodityExposure'].includes('oil')) {
       instruments.push('commodity swaps');
     }
-    
+
     if (portfolioProfile['volatility'] > 0.3) {
       instruments.push('volatility swaps');
     }
-    
+
     return instruments;
   }
 
   private calculateRebalancingFrequency(portfolioProfile: object): string {
     // Calculate how often to rebalance the hedge
     const volatility = portfolioProfile['volatility'];
-    
+
     if (volatility > 0.3) return 'daily';
     if (volatility > 0.2) return 'weekly';
     return 'monthly';
   }
 
-  private async calculateHedgingEffectiveness(hedgingDto: HedgingStrategyDto, strategy: object): Promise<number> {
+  private async calculateHedgingEffectiveness(
+    hedgingDto: HedgingStrategyDto,
+    strategy: object,
+  ): Promise<number> {
     // Calculate expected hedging effectiveness (0-1)
     const baseEffectiveness = 0.7; // 70% base effectiveness
-    const instrumentBonus = this.getInstrumentEffectivenessBonus(strategy['primaryInstrument']);
-    const maturityBonus = this.getMaturityEffectivenessBonus(strategy['maturity']);
-    const diversificationBonus = Math.min(strategy['secondaryInstruments'].length * 0.05, 0.15);
-    
-    const totalEffectiveness = baseEffectiveness + instrumentBonus + maturityBonus + diversificationBonus;
-    
+    const instrumentBonus = this.getInstrumentEffectivenessBonus(
+      strategy['primaryInstrument'],
+    );
+    const maturityBonus = this.getMaturityEffectivenessBonus(
+      strategy['maturity'],
+    );
+    const diversificationBonus = Math.min(
+      strategy['secondaryInstruments'].length * 0.05,
+      0.15,
+    );
+
+    const totalEffectiveness =
+      baseEffectiveness +
+      instrumentBonus +
+      maturityBonus +
+      diversificationBonus;
+
     return Math.min(0.95, totalEffectiveness); // Cap at 95%
   }
 
   private getInstrumentEffectivenessBonus(instrument: string): number {
     const bonuses = {
-      'futures': 0.1,
-      'options': 0.15,
-      'forwards': 0.12,
-      'swaps': 0.08,
+      futures: 0.1,
+      options: 0.15,
+      forwards: 0.12,
+      swaps: 0.08,
     };
     return bonuses[instrument] || 0.05;
   }
@@ -167,48 +200,52 @@ export class HedgingStrategyService {
     const transactionCosts = this.calculateTransactionCosts(strategy);
     const ongoingCosts = this.calculateOngoingCosts(strategy);
     const opportunityCost = this.calculateOpportunityCost(strategy);
-    
+
     return {
       transactionCosts,
       ongoingCosts,
       opportunityCost,
       totalCost: transactionCosts + ongoingCosts + opportunityCost,
-      costAsPercentage: (transactionCosts + ongoingCosts + opportunityCost) / 1000000 * 100, // Assuming $1M portfolio
+      costAsPercentage:
+        ((transactionCosts + ongoingCosts + opportunityCost) / 1000000) * 100, // Assuming $1M portfolio
     };
   }
 
   private calculateTransactionCosts(strategy: object): number {
     const instrument = strategy['primaryInstrument'];
     const hedgeRatio = strategy['hedgeRatio'];
-    
+
     const baseCosts = {
-      'futures': 0.001, // 0.1%
-      'options': 0.02, // 2%
-      'forwards': 0.002, // 0.2%
-      'swaps': 0.005, // 0.5%
+      futures: 0.001, // 0.1%
+      options: 0.02, // 2%
+      forwards: 0.002, // 0.2%
+      swaps: 0.005, // 0.5%
     };
-    
+
     return (baseCosts[instrument] || 0.005) * hedgeRatio * 1000000; // Assuming $1M portfolio
   }
 
   private calculateOngoingCosts(strategy: object): number {
     const rebalancingFrequency = strategy['rebalancingFrequency'];
     const instrument = strategy['primaryInstrument'];
-    
+
     const frequencyMultiplier = {
-      'daily': 252,
-      'weekly': 52,
-      'monthly': 12,
+      daily: 252,
+      weekly: 52,
+      monthly: 12,
     };
-    
+
     const perRebalancingCost = {
-      'futures': 10,
-      'options': 50,
-      'forwards': 25,
-      'swaps': 100,
+      futures: 10,
+      options: 50,
+      forwards: 25,
+      swaps: 100,
     };
-    
-    return frequencyMultiplier[rebalancingFrequency] * (perRebalancingCost[instrument] || 25);
+
+    return (
+      frequencyMultiplier[rebalancingFrequency] *
+      (perRebalancingCost[instrument] || 25)
+    );
   }
 
   private calculateOpportunityCost(strategy: object): number {
@@ -216,7 +253,7 @@ export class HedgingStrategyService {
     const hedgeRatio = strategy['hedgeRatio'];
     const portfolioValue = 1000000; // Assuming $1M portfolio
     const riskFreeRate = 0.03; // 3% risk-free rate
-    
+
     return portfolioValue * hedgeRatio * riskFreeRate;
   }
 
@@ -290,18 +327,28 @@ export class HedgingStrategyService {
     };
   }
 
-  private async updateRiskDataWithHedgingStrategy(portfolioId: string, hedgingStrategy: object): Promise<void> {
-    await this.riskDataRepository.update(
-      { 
-        portfolioId, 
-        createdAt: () => 'SELECT MAX(created_at) FROM risk_data WHERE portfolioId = :portfolioId' 
-      },
-      { hedgingStrategy }
-    );
+  private async updateRiskDataWithHedgingStrategy(
+    portfolioId: string,
+    hedgingStrategy: object,
+  ): Promise<void> {
+    const latestRiskData = await this.riskDataRepository.findOne({
+      where: { portfolioId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!latestRiskData) {
+      return;
+    }
+
+    await this.riskDataRepository.update(latestRiskData.id, {
+      hedgingStrategy,
+    });
   }
 
   async evaluateHedgingPerformance(portfolioId: string): Promise<object> {
-    this.logger.log(`Evaluating hedging performance for portfolio: ${portfolioId}`);
+    this.logger.log(
+      `Evaluating hedging performance for portfolio: ${portfolioId}`,
+    );
 
     const riskData = await this.riskDataRepository.findOne({
       where: { portfolioId },
@@ -312,7 +359,8 @@ export class HedgingStrategyService {
       throw new Error('No hedging strategy found for portfolio');
     }
 
-    const actualEffectiveness = await this.calculateActualEffectiveness(portfolioId);
+    const actualEffectiveness =
+      await this.calculateActualEffectiveness(portfolioId);
     const expectedEffectiveness = riskData.hedgingStrategy['effectiveness'];
     const performanceRatio = actualEffectiveness / expectedEffectiveness;
 
@@ -326,7 +374,9 @@ export class HedgingStrategyService {
     };
   }
 
-  private async calculateActualEffectiveness(portfolioId: string): Promise<number> {
+  private async calculateActualEffectiveness(
+    portfolioId: string,
+  ): Promise<number> {
     // Calculate actual hedging effectiveness based on historical performance
     // In production, this would analyze actual P&L data
     return 0.75; // Placeholder: 75% actual effectiveness
@@ -339,12 +389,18 @@ export class HedgingStrategyService {
     return 'Immediate strategy change needed';
   }
 
-  async adjustHedgingStrategy(portfolioId: string, adjustments: object): Promise<object> {
+  async adjustHedgingStrategy(
+    portfolioId: string,
+    adjustments: object,
+  ): Promise<object> {
     this.logger.log(`Adjusting hedging strategy for portfolio: ${portfolioId}`);
 
     const currentStrategy = await this.getCurrentHedgingStrategy(portfolioId);
-    const adjustedStrategy = await this.applyAdjustments(currentStrategy, adjustments);
-    
+    const adjustedStrategy = await this.applyAdjustments(
+      currentStrategy,
+      adjustments,
+    );
+
     await this.updateRiskDataWithHedgingStrategy(portfolioId, adjustedStrategy);
 
     return {
@@ -356,7 +412,9 @@ export class HedgingStrategyService {
     };
   }
 
-  private async getCurrentHedgingStrategy(portfolioId: string): Promise<object> {
+  private async getCurrentHedgingStrategy(
+    portfolioId: string,
+  ): Promise<object> {
     const riskData = await this.riskDataRepository.findOne({
       where: { portfolioId },
       order: { createdAt: 'DESC' },
@@ -365,7 +423,10 @@ export class HedgingStrategyService {
     return riskData?.hedgingStrategy || {};
   }
 
-  private async applyAdjustments(currentStrategy: object, adjustments: object): Promise<object> {
+  private async applyAdjustments(
+    currentStrategy: object,
+    adjustments: object,
+  ): Promise<object> {
     return {
       ...currentStrategy,
       ...adjustments,

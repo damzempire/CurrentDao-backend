@@ -19,7 +19,7 @@ export class PerformanceAnalyticsService implements OnModuleInit {
 
   private startAnalyticsCollection() {
     this.logger.log('Starting Performance Analytics Engine...');
-    
+
     // Sample performance every minute
     setInterval(() => {
       this.samplePerformance();
@@ -40,7 +40,9 @@ export class PerformanceAnalyticsService implements OnModuleInit {
       this.historicalMetrics.shift();
     }
 
-    this.logger.debug(`Performance sampled at ${metric.timestamp.toLocaleTimeString()}. Uptime: ${uptime.toFixed(0)}s`);
+    this.logger.debug(
+      `Performance sampled at ${metric.timestamp.toLocaleTimeString()}. Uptime: ${uptime.toFixed(0)}s`,
+    );
   }
 
   /**
@@ -55,7 +57,8 @@ export class PerformanceAnalyticsService implements OnModuleInit {
     };
 
     if (this.historicalMetrics.length > 5) {
-      const lastAvg = this.historicalMetrics[this.historicalMetrics.length - 1].avgResponseMs;
+      const lastAvg =
+        this.historicalMetrics[this.historicalMetrics.length - 1].avgResponseMs;
       const firstAvg = this.historicalMetrics[0].avgResponseMs;
       trend.isRising = lastAvg > firstAvg;
       trend.isFalling = !trend.isRising;
@@ -70,7 +73,7 @@ export class PerformanceAnalyticsService implements OnModuleInit {
   getSLAReport() {
     const targetUptime = 99.9;
     const currentUptime = (process.uptime() / 86400) * 100; // Simulated day-based percentage
-    
+
     return {
       target: targetUptime,
       actual: 99.95, // Simulated high availability
@@ -85,14 +88,15 @@ export class PerformanceAnalyticsService implements OnModuleInit {
    */
   identifyBottlenecks() {
     const memUsage = process.memoryUsage();
-    if (memUsage.heapUsed > (memUsage.heapTotal * 0.8)) {
+    if (memUsage.heapUsed > memUsage.heapTotal * 0.8) {
       return {
         type: 'MEMORY_LEAK',
-        message: 'High heap usage detected, potential memory leak in service components',
+        message:
+          'High heap usage detected, potential memory leak in service components',
         severity: 'HIGH',
       };
     }
-    
+
     return {
       type: 'NONE',
       message: 'No current bottlenecks identified',

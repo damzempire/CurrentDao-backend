@@ -13,7 +13,7 @@ export class DashboardService {
    */
   getDashboardState() {
     this.logger.debug('Refreshing monitoring dashboard state...');
-    
+
     const memUsage = process.memoryUsage();
     return {
       timestamp: new Date().toISOString(),

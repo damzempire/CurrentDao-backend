@@ -1,12 +1,19 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { metrics, Meter, Counter, UpDownCounter, Histogram, ObservableGauge } from '@opentelemetry/api';
+import {
+  metrics,
+  Meter,
+  Counter,
+  UpDownCounter,
+  Histogram,
+  ObservableGauge,
+} from '@opentelemetry/api';
 import * as os from 'os';
 
 @Injectable()
 export class MetricsCollectorService implements OnModuleInit {
   private readonly logger = new Logger(MetricsCollectorService.name);
   private readonly meter: Meter;
-  
+
   // Custom metrics
   private readonly cpuUsageGauge: ObservableGauge;
   private readonly memoryUsageGauge: ObservableGauge;
@@ -22,17 +29,26 @@ export class MetricsCollectorService implements OnModuleInit {
       description: 'System CPU usage percentage',
     });
 
-    this.memoryUsageGauge = this.meter.createObservableGauge('system_memory_usage', {
-      description: 'System memory usage in bytes',
-    });
+    this.memoryUsageGauge = this.meter.createObservableGauge(
+      'system_memory_usage',
+      {
+        description: 'System memory usage in bytes',
+      },
+    );
 
-    this.activeHandlesGauge = this.meter.createObservableGauge('nodejs_active_handles', {
-      description: 'Number of active handles in the event loop',
-    });
+    this.activeHandlesGauge = this.meter.createObservableGauge(
+      'nodejs_active_handles',
+      {
+        description: 'Number of active handles in the event loop',
+      },
+    );
 
-    this.eventLoopDelayGauge = this.meter.createObservableGauge('nodejs_event_loop_delay_ms', {
-      description: 'Current event loop delay in milliseconds',
-    });
+    this.eventLoopDelayGauge = this.meter.createObservableGauge(
+      'nodejs_event_loop_delay_ms',
+      {
+        description: 'Current event loop delay in milliseconds',
+      },
+    );
 
     this.totalRequests = this.meter.createCounter('apm_requests_total', {
       description: 'Total business requests tracked by APM',
@@ -45,6 +61,9 @@ export class MetricsCollectorService implements OnModuleInit {
 
   private startCollection() {
     this.logger.log('Starting APM metrics collection...');
+    const processWithInternals = process as unknown as {
+      _getActiveHandles?: () => unknown[];
+    };
 
     this.cpuUsageGauge.addCallback((result) => {
       const cpus = os.cpus();
@@ -57,8 +76,11 @@ export class MetricsCollectorService implements OnModuleInit {
     });
 
     this.activeHandlesGauge.addCallback((result) => {
-      // @ts-ignore - access to internal process state
-      result.observe(process._getActiveHandles ? process._getActiveHandles().length : 0);
+      result.observe(
+        processWithInternals._getActiveHandles
+          ? processWithInternals._getActiveHandles().length
+          : 0,
+      );
     });
 
     // Sample event loop delay
@@ -66,7 +88,9 @@ export class MetricsCollectorService implements OnModuleInit {
     setInterval(() => {
       const now = Date.now();
       const delay = now - lastTime - 100; // Expected 100ms interval
-      this.eventLoopDelayGauge.addCallback((result) => result.observe(delay > 0 ? delay : 0));
+      this.eventLoopDelayGauge.addCallback((result) =>
+        result.observe(delay > 0 ? delay : 0),
+      );
       lastTime = now;
     }, 100);
   }

@@ -20,12 +20,15 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     SecurityMonitorService,
     SecurityMiddleware,
   ],
-  exports: [SecurityHeadersService, WafService, DdosProtectionService, SecurityMonitorService],
+  exports: [
+    SecurityHeadersService,
+    WafService,
+    DdosProtectionService,
+    SecurityMonitorService,
+  ],
 })
 export class SecurityModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(SecurityMiddleware)
-      .forRoutes('*');
+    consumer.apply(SecurityMiddleware).forRoutes('*');
   }
 }

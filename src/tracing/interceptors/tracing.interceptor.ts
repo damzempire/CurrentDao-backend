@@ -30,48 +30,61 @@ export class TracingInterceptor implements NestInterceptor {
           'http.user_agent': request.get('user-agent') || 'Unknown',
         });
 
-        const subscription = next.handle().pipe(
-          tap({
-            next: (data) => {
-              const response = context.switchToHttp().getResponse();
-              const duration = Date.now() - startTime;
-              const statusCode = response.statusCode;
+        const subscription = next
+          .handle()
+          .pipe(
+            tap({
+              next: (data) => {
+                const response = context.switchToHttp().getResponse();
+                const duration = Date.now() - startTime;
+                const statusCode = response.statusCode;
 
-              span.setAttribute('http.status_code', statusCode);
-              span.setStatus({ code: SpanStatusCode.OK });
-              
-              this.analytics.trackRequest({
-                method,
-                path: url,
-                status: statusCode,
-              }, duration);
+                span.setAttribute('http.status_code', statusCode);
+                span.setStatus({ code: SpanStatusCode.OK });
 
-              this.logger.debug(`${method} ${url} completed in ${duration}ms`);
-            },
-            error: (error) => {
-              const duration = Date.now() - startTime;
-              const statusCode = error.status || 500;
-              
-              span.setStatus({
-                code: SpanStatusCode.ERROR,
-                message: error.message,
-              });
-              span.setAttribute('http.status_code', statusCode);
-              span.recordException(error);
+                this.analytics.trackRequest(
+                  {
+                    method,
+                    path: url,
+                    status: statusCode,
+                  },
+                  duration,
+                );
 
-              this.analytics.trackRequest({
-                method,
-                path: url,
-                status: statusCode,
-              }, duration);
+                this.logger.debug(
+                  `${method} ${url} completed in ${duration}ms`,
+                );
+              },
+              error: (error) => {
+                const duration = Date.now() - startTime;
+                const statusCode = error.status || 500;
 
-              this.logger.error(`${method} ${url} failed with error: ${error.message}`);
-            },
-            complete: () => {
-              span.end();
-            },
-          }),
-        ).subscribe(observer);
+                span.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: error.message,
+                });
+                span.setAttribute('http.status_code', statusCode);
+                span.recordException(error);
+
+                this.analytics.trackRequest(
+                  {
+                    method,
+                    path: url,
+                    status: statusCode,
+                  },
+                  duration,
+                );
+
+                this.logger.error(
+                  `${method} ${url} failed with error: ${error.message}`,
+                );
+              },
+              complete: () => {
+                span.end();
+              },
+            }),
+          )
+          .subscribe(observer);
 
         return () => {
           subscription.unsubscribe();

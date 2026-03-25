@@ -11,7 +11,9 @@ describe('TracingInterceptor', () => {
     analyticsService = {
       trackRequest: jest.fn(),
     };
-    interceptor = new TracingInterceptor(analyticsService as TraceAnalyticsService);
+    interceptor = new TracingInterceptor(
+      analyticsService as TraceAnalyticsService,
+    );
   });
 
   it('should be defined', () => {
@@ -37,7 +39,8 @@ describe('TracingInterceptor', () => {
       handle: () => of('test-data'),
     };
 
-    interceptor.intercept(mockContext as ExecutionContext, mockHandler as CallHandler)
+    interceptor
+      .intercept(mockContext as ExecutionContext, mockHandler as CallHandler)
       .subscribe({
         next: () => {
           expect(analyticsService.trackRequest).toHaveBeenCalled();

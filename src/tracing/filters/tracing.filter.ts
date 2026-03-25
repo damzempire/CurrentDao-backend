@@ -17,7 +17,7 @@ export class TracingFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
@@ -26,7 +26,10 @@ export class TracingFilter implements ExceptionFilter {
     const message = (exception as any).message || 'Internal server error';
     const traceId = trace.getSpan(context.active())?.spanContext().traceId;
 
-    this.logger.error(`Error on ${request.method} ${request.url}: ${message}`, (exception as any).stack);
+    this.logger.error(
+      `Error on ${request.method} ${request.url}: ${message}`,
+      (exception as any).stack,
+    );
     this.logger.debug(`Error correlation traceId: ${traceId}`);
 
     response.status(status).json({

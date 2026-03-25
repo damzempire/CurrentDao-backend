@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ThrottlerOptionsFactory, ThrottlerModuleOptions } from '@nestjs/throttler';
+import {
+  ThrottlerOptionsFactory,
+  ThrottlerModuleOptions,
+} from '@nestjs/throttler';
 
 @Injectable()
 export class DdosProtectionService implements ThrottlerOptionsFactory {
@@ -10,17 +13,17 @@ export class DdosProtectionService implements ThrottlerOptionsFactory {
     return [
       {
         name: 'short',
-        ttl: 1000,   // 1 second
-        limit: 10,   // 10 requests per second
+        ttl: 1000, // 1 second
+        limit: 10, // 10 requests per second
       },
       {
         name: 'medium',
-        ttl: 10000,  // 10 seconds
-        limit: 50,  // 50 requests per 10 seconds
+        ttl: 10000, // 10 seconds
+        limit: 50, // 50 requests per 10 seconds
       },
       {
         name: 'long',
-        ttl: 60000,  // 1 minute
+        ttl: 60000, // 1 minute
         limit: 100, // 100 requests per minute
       },
     ];
@@ -30,6 +33,8 @@ export class DdosProtectionService implements ThrottlerOptionsFactory {
    * Log blocked requests
    */
   logBlockedRequest(ip: string, reason: string) {
-    this.logger.warn(`DDoS protection blocked request from IP: ${ip}. Reason: ${reason}`);
+    this.logger.warn(
+      `DDoS protection blocked request from IP: ${ip}. Reason: ${reason}`,
+    );
   }
 }

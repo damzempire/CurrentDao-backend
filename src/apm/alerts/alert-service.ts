@@ -13,7 +13,7 @@ export class AlertService implements OnModuleInit {
 
   private startAlertMonitoring() {
     this.logger.log('Starting Alert System monitoring...');
-    
+
     // Check system status every 15 seconds
     setInterval(() => {
       this.checkSystemAlerts();
@@ -27,7 +27,10 @@ export class AlertService implements OnModuleInit {
     const cpuUsage = (loadAvg / cpus) * 100;
 
     if (cpuUsage > this.CPU_THRESHOLD) {
-      this.emitAlert('CRITICAL', `High CPU load detected: ${cpuUsage.toFixed(2)}% on ${cpus} cores.`);
+      this.emitAlert(
+        'CRITICAL',
+        `High CPU load detected: ${cpuUsage.toFixed(2)}% on ${cpus} cores.`,
+      );
     }
 
     // Check Memory Usage
@@ -37,10 +40,15 @@ export class AlertService implements OnModuleInit {
     const ratio = heapUsed / heapTotal;
 
     if (ratio > this.MEMORY_THRESHOLD) {
-      this.emitAlert('WARNING', `Critical Heap Memory usage: ${(ratio * 100).toFixed(2)}% (${(heapUsed / 1024 / 1024).toFixed(2)}MB used out of ${(heapTotal / 1024 / 1024).toFixed(2)}MB)`);
+      this.emitAlert(
+        'WARNING',
+        `Critical Heap Memory usage: ${(ratio * 100).toFixed(2)}% (${(heapUsed / 1024 / 1024).toFixed(2)}MB used out of ${(heapTotal / 1024 / 1024).toFixed(2)}MB)`,
+      );
     }
 
-    this.logger.debug(`Alert monitoring check complete. System Status: Healthy - CPU: ${cpuUsage.toFixed(1)}%, Mem: ${(ratio * 100).toFixed(1)}%`);
+    this.logger.debug(
+      `Alert monitoring check complete. System Status: Healthy - CPU: ${cpuUsage.toFixed(1)}%, Mem: ${(ratio * 100).toFixed(1)}%`,
+    );
   }
 
   /**
@@ -49,10 +57,10 @@ export class AlertService implements OnModuleInit {
   emitAlert(level: 'INFO' | 'WARNING' | 'CRITICAL', message: string) {
     const timestamp = new Date().toISOString();
     const alertMessage = `[APM ALERT] ${level.toUpperCase()} - ${timestamp}: ${message}`;
-    
+
     // Alert via Logger. In production, this would trigger email / PagerDuty / Webhook
     this.logger.error(alertMessage);
-    
+
     // Potential Slack or Email integration
     this.triggerNotifier(level, message);
   }

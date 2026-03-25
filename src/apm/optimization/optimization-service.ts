@@ -14,13 +14,15 @@ export class OptimizationService {
    */
   async runAutomatedOptimization() {
     this.logger.log('Running automated performance optimization...');
-    
+
     const bottlenecks = this.analytics.identifyBottlenecks();
     if (bottlenecks.type === 'MEMORY_LEAK') {
       this.logger.warn(`Potential optimization: ${bottlenecks.message}`);
-      
+
       // Simulated optimization: e.g. manual GC if possible or clearing caches
-      this.logger.log('Action: Clearing non-essential caches for memory recovery');
+      this.logger.log(
+        'Action: Clearing non-essential caches for memory recovery',
+      );
       if (global.gc) {
         global.gc();
       }
@@ -31,13 +33,16 @@ export class OptimizationService {
     const cpuCount = os.cpus().length;
     process.env.DB_POOL_SIZE = Math.max(10, cpuCount * 2).toString();
 
-    this.logger.log(`Optimization completed successfuly. Target: 30% performance gain.`);
+    this.logger.log(
+      `Optimization completed successfuly. Target: 30% performance gain.`,
+    );
     this.lastOptimizationDate = new Date();
-    
+
     return {
       status: 'Optimization Successful',
       date: this.lastOptimizationDate,
-      recommendation: 'Periodical optimization recommended for long-running nodes',
+      recommendation:
+        'Periodical optimization recommended for long-running nodes',
     };
   }
 
@@ -49,19 +54,22 @@ export class OptimizationService {
       {
         id: 'REF_001',
         title: 'CPU/Memory Balancing',
-        description: 'Scale service to 2 nodes based on high CPU usage during peak hours',
+        description:
+          'Scale service to 2 nodes based on high CPU usage during peak hours',
         priority: 'MEDIUM',
       },
       {
         id: 'REF_002',
         title: 'Query Optimization',
-        description: 'Add index to `SoroSusu` collection for faster transactions',
+        description:
+          'Add index to `SoroSusu` collection for faster transactions',
         priority: 'HIGH',
       },
       {
         id: 'REF_003',
         title: 'Caching',
-        description: 'Enable Redis caching for dashboard metrics to improve response time by up to 50%',
+        description:
+          'Enable Redis caching for dashboard metrics to improve response time by up to 50%',
         priority: 'HIGH',
       },
     ];

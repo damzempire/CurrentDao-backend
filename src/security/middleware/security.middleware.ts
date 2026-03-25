@@ -1,4 +1,9 @@
-import { Injectable, NestMiddleware, Logger, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  Logger,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { WafService } from '../waf/waf.service';
 import { SecurityMonitorService } from '../monitoring/security-monitor.service';
@@ -30,8 +35,12 @@ export class SecurityMiddleware implements NestMiddleware {
           reason: wafResult.reason,
         });
 
-        this.logger.warn(`WAF Blocking malicious request: ${method} ${url} by ${ip}. Reason: ${wafResult.reason}`);
-        throw new ForbiddenException(wafResult.reason || 'Malicious request blocked by WAF');
+        this.logger.warn(
+          `WAF Blocking malicious request: ${method} ${url} by ${ip}. Reason: ${wafResult.reason}`,
+        );
+        throw new ForbiddenException(
+          wafResult.reason || 'Malicious request blocked by WAF',
+        );
       }
 
       // 3. Simple CSRF check for state-changing operations
@@ -43,10 +52,13 @@ export class SecurityMiddleware implements NestMiddleware {
             ip: ip || 'Unknown',
             method,
             url,
-            reason: 'Potential CSRF attempt detected via origin/referer mismatch',
+            reason:
+              'Potential CSRF attempt detected via origin/referer mismatch',
           });
 
-          this.logger.warn(`CSRF protection blocking request: origin mismatch ${origin}`);
+          this.logger.warn(
+            `CSRF protection blocking request: origin mismatch ${origin}`,
+          );
           throw new ForbiddenException('CSRF attempt detected');
         }
       }

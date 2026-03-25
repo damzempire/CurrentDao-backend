@@ -1,5 +1,17 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { trace, Tracer, Span, SpanOptions, context, propagation } from '@opentelemetry/api';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
+import {
+  trace,
+  Tracer,
+  Span,
+  SpanOptions,
+  context,
+  propagation,
+} from '@opentelemetry/api';
 import sdk from './otel-sdk';
 
 @Injectable()
@@ -12,7 +24,7 @@ export class OpenTelemetryService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('OpenTelemetry Tracer initialized');
   }
 
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('OpenTelemetry SDK lifecycle managed by Main bootstrap');
   }
 
@@ -36,7 +48,10 @@ export class OpenTelemetryService implements OnModuleInit, OnModuleDestroy {
   /**
    * Execute a callback in the context of a new active span
    */
-  async withSpan<T>(name: string, callback: (span: Span) => Promise<T>): Promise<T> {
+  async withSpan<T>(
+    name: string,
+    callback: (span: Span) => Promise<T>,
+  ): Promise<T> {
     return this.tracer.startActiveSpan(name, async (span: Span) => {
       try {
         const result = await callback(span);

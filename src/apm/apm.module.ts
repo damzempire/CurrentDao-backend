@@ -14,6 +14,12 @@ import { OptimizationService } from './optimization/optimization-service';
     PerformanceAnalyticsService,
     OptimizationService,
   ],
-  exports: [MetricsCollectorService, DashboardService, AlertService, PerformanceAnalyticsService, OptimizationService],
+  exports: [
+    MetricsCollectorService,
+    DashboardService,
+    AlertService,
+    PerformanceAnalyticsService,
+    OptimizationService,
+  ],
 })
 export class ApmModule {}

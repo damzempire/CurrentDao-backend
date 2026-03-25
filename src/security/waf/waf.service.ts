@@ -17,7 +17,11 @@ interface WafConfig {
 export class WafService implements OnModuleInit {
   private readonly logger = new Logger(WafService.name);
   private config: WafConfig;
-  private readonly ruleCache: { name: string; regex: RegExp; block: boolean }[] = [];
+  private readonly ruleCache: {
+    name: string;
+    regex: RegExp;
+    block: boolean;
+  }[] = [];
 
   onModuleInit() {
     this.loadRules();
@@ -28,7 +32,7 @@ export class WafService implements OnModuleInit {
       const configPath = path.resolve(process.cwd(), 'security/waf-rules.json');
       const data = fs.readFileSync(configPath, 'utf8');
       this.config = JSON.parse(data);
-      
+
       this.ruleCache.length = 0;
       for (const rule of this.config.rules) {
         this.ruleCache.push({
@@ -39,7 +43,10 @@ export class WafService implements OnModuleInit {
       }
       this.logger.log(`Successfully loaded ${this.ruleCache.length} WAF rules`);
     } catch (error) {
-      this.logger.error('Failed to load WAF rules, falling back to empty ruleset', error.stack);
+      this.logger.error(
+        'Failed to load WAF rules, falling back to empty ruleset',
+        error.stack,
+      );
       this.config = { rules: [], globalExcludes: [] };
     }
   }
@@ -47,8 +54,12 @@ export class WafService implements OnModuleInit {
   /**
    * Check if a request payload contains malicious patterns
    */
-  isRequestSafe(url: string, body: any, query: any): { safe: boolean; reason?: string } {
-    if (this.config.globalExcludes.some(exclude => url.includes(exclude))) {
+  isRequestSafe(
+    url: string,
+    body: any,
+    query: any,
+  ): { safe: boolean; reason?: string } {
+    if (this.config.globalExcludes.some((exclude) => url.includes(exclude))) {
       return { safe: true };
     }
 

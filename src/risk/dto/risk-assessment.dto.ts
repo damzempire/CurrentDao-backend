@@ -1,4 +1,14 @@
-import { IsString, IsNumber, IsOptional, IsObject, IsEnum, Min, Max, IsBoolean, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsObject,
+  IsEnum,
+  Min,
+  Max,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 
 export enum RiskType {
   MARKET = 'market',

@@ -1,6 +1,3 @@
-import { ConfigModule } from '@nestjs/config';
-import { Test } from '@nestjs/testing';
-
 // Mock environment variables for testing
 process.env.NODE_ENV = 'test';
 process.env.DB_HOST = 'localhost';
@@ -18,22 +15,11 @@ jest.mock('axios', () => ({
   post: jest.fn(),
 }));
 
-// Mock TypeORM
-jest.mock('typeorm', () => ({
-  Entity: () => (target: any) => target,
-  PrimaryGeneratedColumn: () => (target: any, propertyKey: string) => {},
-  Column: () => (target: any, propertyKey: string) => {},
-  CreateDateColumn: () => (target: any, propertyKey: string) => {},
-  UpdateDateColumn: () => (target: any, propertyKey: string) => {},
-  Index: () => (target: any) => {},
-  getRepository: jest.fn(),
-}));
-
 // Global test setup
-beforeAll(async () => {
+beforeAll(() => {
   // Set up any global test configuration
 });
 
-afterAll(async () => {
+afterAll(() => {
   // Clean up any global test configuration
 });

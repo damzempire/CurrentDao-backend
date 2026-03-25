@@ -7,9 +7,17 @@ export class SecurityMonitorService {
   /**
    * Log security events and alerts
    */
-  logSecurityEvent(event: { type: string; ip: string; method: string; url: string; reason?: string }) {
-    this.logger.error(`Security Alert [${event.type}]: ${event.reason || 'Unauthorized access attempt'} by ${event.ip} on ${event.method} ${event.url}`);
-    
+  logSecurityEvent(event: {
+    type: string;
+    ip: string;
+    method: string;
+    url: string;
+    reason?: string;
+  }) {
+    this.logger.error(
+      `Security Alert [${event.type}]: ${event.reason || 'Unauthorized access attempt'} by ${event.ip} on ${event.method} ${event.url}`,
+    );
+
     // In a real application, this would send an alert to a SIEM or Slack/PagerDuty
     this.sendAlert(event);
   }
@@ -17,7 +25,9 @@ export class SecurityMonitorService {
   private sendAlert(event: any) {
     // High performance alerting (likely async)
     setImmediate(() => {
-      this.logger.log(`Forwarding security alert for further analysis: ${event.type}`);
+      this.logger.log(
+        `Forwarding security alert for further analysis: ${event.type}`,
+      );
     });
   }
 
