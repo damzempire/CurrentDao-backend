@@ -14,9 +14,17 @@ export class StressTestService {
   ) {}
 
   async runStressTest(stressTestDto: StressTestDto): Promise<object> {
-    this.logger.log(`Running stress test for portfolio: ${stressTestDto.portfolioId}`);
+    this.logger.log(
+      `Running stress test for portfolio: ${stressTestDto.portfolioId}`,
+    );
 
-    const results = {
+    const results: {
+      portfolioId: string;
+      scenarios: Record<string, any>;
+      summary: Record<string, any>;
+      recommendations: string[];
+      timestamp: Date;
+    } = {
       portfolioId: stressTestDto.portfolioId,
       scenarios: {},
       summary: {},
@@ -26,27 +34,42 @@ export class StressTestService {
 
     // Run predefined scenarios
     for (const scenario of stressTestDto.scenarios) {
-      results.scenarios[scenario] = await this.runScenario(stressTestDto.portfolioId, scenario, stressTestDto.shockMagnitude);
+      results.scenarios[scenario] = await this.runScenario(
+        stressTestDto.portfolioId,
+        scenario,
+        stressTestDto.shockMagnitude,
+      );
     }
 
     // Run custom scenario if provided
     if (stressTestDto.customScenario) {
-      results.scenarios['custom'] = await this.runCustomScenario(stressTestDto.portfolioId, stressTestDto.customScenario);
+      results.scenarios['custom'] = await this.runCustomScenario(
+        stressTestDto.portfolioId,
+        stressTestDto.customScenario,
+      );
     }
 
     // Generate summary and recommendations
     results.summary = await this.generateStressTestSummary(results.scenarios);
-    results.recommendations = await this.generateStressTestRecommendations(results.scenarios);
+    results.recommendations = await this.generateStressTestRecommendations(
+      results.scenarios,
+    );
 
     // Update risk data with stress test results
     await this.updateRiskDataWithStressTest(stressTestDto.portfolioId, results);
 
-    this.logger.log(`Stress test completed for portfolio: ${stressTestDto.portfolioId}, Scenarios: ${stressTestDto.scenarios.length}`);
+    this.logger.log(
+      `Stress test completed for portfolio: ${stressTestDto.portfolioId}, Scenarios: ${stressTestDto.scenarios.length}`,
+    );
 
     return results;
   }
 
-  private async runScenario(portfolioId: string, scenario: string, shockMagnitude?: number): Promise<object> {
+  private async runScenario(
+    portfolioId: string,
+    scenario: string,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const portfolioValue = await this.getPortfolioValue(portfolioId);
     const baseRisk = await this.getBaseRiskMetrics(portfolioId);
 
@@ -54,37 +77,82 @@ export class StressTestService {
 
     switch (scenario) {
       case 'market_crash':
-        scenarioResult = await this.simulateMarketCrash(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateMarketCrash(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'interest_rate_shock':
-        scenarioResult = await this.simulateInterestRateShock(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateInterestRateShock(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'currency_crisis':
-        scenarioResult = await this.simulateCurrencyCrisis(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateCurrencyCrisis(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'commodity_price_shock':
-        scenarioResult = await this.simulateCommodityPriceShock(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateCommodityPriceShock(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'credit_crisis':
-        scenarioResult = await this.simulateCreditCrisis(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateCreditCrisis(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'liquidity_crisis':
-        scenarioResult = await this.simulateLiquidityCrisis(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateLiquidityCrisis(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'operational_failure':
-        scenarioResult = await this.simulateOperationalFailure(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateOperationalFailure(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'regulatory_change':
-        scenarioResult = await this.simulateRegulatoryChange(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateRegulatoryChange(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'geopolitical_crisis':
-        scenarioResult = await this.simulateGeopoliticalCrisis(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulateGeopoliticalCrisis(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       case 'pandemic':
-        scenarioResult = await this.simulatePandemic(portfolioValue, baseRisk, shockMagnitude);
+        scenarioResult = await this.simulatePandemic(
+          portfolioValue,
+          baseRisk,
+          shockMagnitude,
+        );
         break;
       default:
-        scenarioResult = await this.simulateGenericShock(portfolioValue, baseRisk, scenario, shockMagnitude);
+        scenarioResult = await this.simulateGenericShock(
+          portfolioValue,
+          baseRisk,
+          scenario,
+          shockMagnitude,
+        );
     }
 
     return {
@@ -95,7 +163,10 @@ export class StressTestService {
     };
   }
 
-  private async runCustomScenario(portfolioId: string, customScenario: object): Promise<object> {
+  private async runCustomScenario(
+    portfolioId: string,
+    customScenario: object,
+  ): Promise<object> {
     const portfolioValue = await this.getPortfolioValue(portfolioId);
     const baseRisk = await this.getBaseRiskMetrics(portfolioId);
 
@@ -119,15 +190,21 @@ export class StressTestService {
       portfolioImpact: totalImpact,
       riskIncrease: this.calculateRiskIncrease(baseRisk, totalImpact),
       customParameters: customScenario,
-      severity: this.calculateScenarioSeverity({ portfolioImpact: totalImpact }),
+      severity: this.calculateScenarioSeverity({
+        portfolioImpact: totalImpact,
+      }),
       recoveryTime: this.estimateRecoveryTime({ portfolioImpact: totalImpact }),
     };
   }
 
-  private async simulateMarketCrash(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateMarketCrash(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -30; // Default 30% market drop
     const portfolioImpact = portfolioValue * (magnitude / 100);
-    
+
     // Calculate sector-specific impacts
     const sectorImpacts = {
       energy: portfolioValue * 0.4 * (magnitude / 100) * 1.2, // Energy more volatile
@@ -145,16 +222,20 @@ export class StressTestService {
     };
   }
 
-  private async simulateInterestRateShock(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateInterestRateShock(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || 200; // Default 200 bps increase
     const duration = 5; // Portfolio duration in years
-    
+
     // Calculate bond price impact
     const bondImpact = -duration * (magnitude / 10000) * portfolioValue * 0.6;
-    
+
     // Calculate equity impact
     const equityImpact = portfolioValue * 0.4 * (magnitude / 10000) * -2; // Equities negatively impacted
-    
+
     const portfolioImpact = bondImpact + equityImpact;
 
     return {
@@ -167,12 +248,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateCurrencyCrisis(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateCurrencyCrisis(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -20; // Default 20% currency devaluation
     const currencyExposure = portfolioValue * 0.3; // 30% currency exposure
-    
+
     const portfolioImpact = currencyExposure * (magnitude / 100);
-    
+
     // Calculate impact by currency
     const currencyImpacts = {
       EUR: currencyExposure * 0.4 * (magnitude / 100),
@@ -189,12 +274,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateCommodityPriceShock(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateCommodityPriceShock(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -40; // Default 40% commodity price drop
     const commodityExposure = portfolioValue * 0.25; // 25% commodity exposure
-    
+
     const portfolioImpact = commodityExposure * (magnitude / 100);
-    
+
     // Calculate impact by commodity
     const commodityImpacts = {
       oil: commodityExposure * 0.5 * (magnitude / 100),
@@ -210,12 +299,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateCreditCrisis(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateCreditCrisis(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || 300; // Default 300 bps credit spread widening
     const creditExposure = portfolioValue * 0.35; // 35% credit exposure
-    
+
     const portfolioImpact = creditExposure * (magnitude / 10000);
-    
+
     // Calculate impact by credit quality
     const creditImpacts = {
       aaa: creditExposure * 0.2 * (magnitude / 10000) * 0.5,
@@ -233,12 +326,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateLiquidityCrisis(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateLiquidityCrisis(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || 50; // Default 50% liquidity reduction
     const illiquidAssets = portfolioValue * 0.4; // 40% illiquid assets
-    
+
     const portfolioImpact = illiquidAssets * (magnitude / 100) * 0.3; // 30% price impact
-    
+
     return {
       portfolioImpact,
       liquidityReduction: magnitude,
@@ -248,12 +345,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateOperationalFailure(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateOperationalFailure(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || 10; // Default 10% operational impact
     const operationalRisk = portfolioValue * 0.05; // 5% operational risk capital
-    
+
     const portfolioImpact = operationalRisk * (magnitude / 100);
-    
+
     return {
       portfolioImpact,
       systemDowntime: magnitude * 24, // hours
@@ -264,12 +365,16 @@ export class StressTestService {
     };
   }
 
-  private async simulateRegulatoryChange(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateRegulatoryChange(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || 15; // Default 15% regulatory impact
     const regulatoryCapital = portfolioValue * 0.08; // 8% regulatory capital
-    
+
     const portfolioImpact = regulatoryCapital * (magnitude / 100);
-    
+
     return {
       portfolioImpact,
       capitalRequirementIncrease: magnitude,
@@ -279,10 +384,14 @@ export class StressTestService {
     };
   }
 
-  private async simulateGeopoliticalCrisis(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulateGeopoliticalCrisis(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -25; // Default 25% market impact
     const portfolioImpact = portfolioValue * (magnitude / 100);
-    
+
     return {
       portfolioImpact,
       regionalImpacts: {
@@ -295,10 +404,14 @@ export class StressTestService {
     };
   }
 
-  private async simulatePandemic(portfolioValue: number, baseRisk: object, shockMagnitude?: number): Promise<object> {
+  private async simulatePandemic(
+    portfolioValue: number,
+    baseRisk: object,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -35; // Default 35% economic impact
     const portfolioImpact = portfolioValue * (magnitude / 100);
-    
+
     return {
       portfolioImpact,
       sectorImpacts: {
@@ -313,10 +426,15 @@ export class StressTestService {
     };
   }
 
-  private async simulateGenericShock(portfolioValue: number, baseRisk: object, scenario: string, shockMagnitude?: number): Promise<object> {
+  private async simulateGenericShock(
+    portfolioValue: number,
+    baseRisk: object,
+    scenario: string,
+    shockMagnitude?: number,
+  ): Promise<object> {
     const magnitude = shockMagnitude || -20;
     const portfolioImpact = portfolioValue * (magnitude / 100);
-    
+
     return {
       portfolioImpact,
       scenario,
@@ -327,17 +445,20 @@ export class StressTestService {
 
   private calculateTotalImpact(portfolioValue: number, shocks: object): number {
     let totalImpact = 0;
-    
+
     for (const [key, value] of Object.entries(shocks)) {
       if (typeof value === 'number') {
         totalImpact += Math.abs(portfolioValue * (value / 100));
       }
     }
-    
+
     return totalImpact;
   }
 
-  private calculateRiskIncrease(baseRisk: object, portfolioImpact: number): number {
+  private calculateRiskIncrease(
+    baseRisk: object,
+    portfolioImpact: number,
+  ): number {
     const baseRiskLevel = baseRisk['riskLevel'] || 2;
     const riskIncrease = Math.abs(portfolioImpact) / 100000; // Scale by $100k
     return Math.min(4, baseRiskLevel + riskIncrease);
@@ -345,7 +466,7 @@ export class StressTestService {
 
   private calculateScenarioSeverity(scenarioResult: object): string {
     const impact = Math.abs(scenarioResult['portfolioImpact'] || 0);
-    
+
     if (impact > 500000) return 'critical';
     if (impact > 200000) return 'high';
     if (impact > 100000) return 'medium';
@@ -354,85 +475,110 @@ export class StressTestService {
 
   private estimateRecoveryTime(scenarioResult: object): string {
     const severity = this.calculateScenarioSeverity(scenarioResult);
-    
+
     const recoveryTimes = {
-      'critical': '12-24 months',
-      'high': '6-12 months',
-      'medium': '3-6 months',
-      'low': '1-3 months',
+      critical: '12-24 months',
+      high: '6-12 months',
+      medium: '3-6 months',
+      low: '1-3 months',
     };
-    
+
     return recoveryTimes[severity] || '3-6 months';
   }
 
   private async generateStressTestSummary(scenarios: object): Promise<object> {
     const scenarioResults = Object.values(scenarios);
-    const impacts = scenarioResults.map(s => Math.abs(s['portfolioImpact'] || 0));
-    const riskIncreases = scenarioResults.map(s => s['riskIncrease'] || 0);
-    
+    const impacts = scenarioResults.map((s) =>
+      Math.abs(s['portfolioImpact'] || 0),
+    );
+    const riskIncreases = scenarioResults.map((s) => s['riskIncrease'] || 0);
+
     return {
       worstCaseScenario: Math.max(...impacts),
-      averageImpact: impacts.reduce((sum, impact) => sum + impact, 0) / impacts.length,
+      averageImpact:
+        impacts.reduce((sum, impact) => sum + impact, 0) / impacts.length,
       maxRiskIncrease: Math.max(...riskIncreases),
       scenariosTested: scenarioResults.length,
-      criticalScenarios: scenarioResults.filter(s => this.calculateScenarioSeverity(s) === 'critical').length,
-      highScenarios: scenarioResults.filter(s => this.calculateScenarioSeverity(s) === 'high').length,
+      criticalScenarios: scenarioResults.filter(
+        (s) => this.calculateScenarioSeverity(s) === 'critical',
+      ).length,
+      highScenarios: scenarioResults.filter(
+        (s) => this.calculateScenarioSeverity(s) === 'high',
+      ).length,
       overallResilience: this.calculateOverallResilience(impacts),
     };
   }
 
   private calculateOverallResilience(impacts: number[]): number {
     const maxImpact = Math.max(...impacts);
-    const avgImpact = impacts.reduce((sum, impact) => sum + impact, 0) / impacts.length;
-    
+    const avgImpact =
+      impacts.reduce((sum, impact) => sum + impact, 0) / impacts.length;
+
     // Resilience score (0-100, higher is better)
-    const resilienceScore = Math.max(0, 100 - (maxImpact / 10000) - (avgImpact / 20000));
+    const resilienceScore = Math.max(
+      0,
+      100 - maxImpact / 10000 - avgImpact / 20000,
+    );
     return Math.round(resilienceScore);
   }
 
-  private async generateStressTestRecommendations(scenarios: object): Promise<string[]> {
-    const recommendations = [];
+  private async generateStressTestRecommendations(
+    scenarios: object,
+  ): Promise<string[]> {
+    const recommendations: string[] = [];
     const scenarioResults = Object.entries(scenarios);
-    
+
     // Analyze scenarios and generate recommendations
-    const criticalScenarios = scenarioResults.filter(([, result]) => 
-      this.calculateScenarioSeverity(result) === 'critical'
+    const criticalScenarios = scenarioResults.filter(
+      ([, result]) => this.calculateScenarioSeverity(result) === 'critical',
     );
-    
+
     if (criticalScenarios.length > 0) {
-      recommendations.push('Implement immediate risk mitigation for critical scenarios');
-      recommendations.push('Increase capital reserves to cover worst-case losses');
+      recommendations.push(
+        'Implement immediate risk mitigation for critical scenarios',
+      );
+      recommendations.push(
+        'Increase capital reserves to cover worst-case losses',
+      );
     }
-    
-    const highScenarios = scenarioResults.filter(([, result]) => 
-      this.calculateScenarioSeverity(result) === 'high'
+
+    const highScenarios = scenarioResults.filter(
+      ([, result]) => this.calculateScenarioSeverity(result) === 'high',
     );
-    
+
     if (highScenarios.length > 2) {
       recommendations.push('Diversify portfolio to reduce concentration risk');
-      recommendations.push('Enhance hedging strategies for high-impact scenarios');
+      recommendations.push(
+        'Enhance hedging strategies for high-impact scenarios',
+      );
     }
-    
+
     // Check for specific risk types
-    const hasMarketRisk = scenarioResults.some(([name]) => name.includes('market') || name.includes('crash'));
-    const hasCreditRisk = scenarioResults.some(([name]) => name.includes('credit'));
-    const hasLiquidityRisk = scenarioResults.some(([name]) => name.includes('liquidity'));
-    
+    const hasMarketRisk = scenarioResults.some(
+      ([name]) => name.includes('market') || name.includes('crash'),
+    );
+    const hasCreditRisk = scenarioResults.some(([name]) =>
+      name.includes('credit'),
+    );
+    const hasLiquidityRisk = scenarioResults.some(([name]) =>
+      name.includes('liquidity'),
+    );
+
     if (hasMarketRisk) {
       recommendations.push('Consider market-neutral strategies');
       recommendations.push('Implement dynamic asset allocation');
     }
-    
+
     if (hasCreditRisk) {
       recommendations.push('Enhance credit quality monitoring');
       recommendations.push('Increase credit diversification');
     }
-    
+
     if (hasLiquidityRisk) {
       recommendations.push('Maintain higher liquidity buffers');
       recommendations.push('Establish contingency funding lines');
     }
-    
+
     return recommendations;
   }
 
@@ -452,14 +598,22 @@ export class StressTestService {
     };
   }
 
-  private async updateRiskDataWithStressTest(portfolioId: string, stressTestResults: object): Promise<void> {
-    await this.riskDataRepository.update(
-      { 
-        portfolioId, 
-        createdAt: () => 'SELECT MAX(created_at) FROM risk_data WHERE portfolioId = :portfolioId' 
-      },
-      { stressTestResult: stressTestResults }
-    );
+  private async updateRiskDataWithStressTest(
+    portfolioId: string,
+    stressTestResults: object,
+  ): Promise<void> {
+    const latestRiskData = await this.riskDataRepository.findOne({
+      where: { portfolioId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!latestRiskData) {
+      return;
+    }
+
+    await this.riskDataRepository.update(latestRiskData.id, {
+      stressTestResult: stressTestResults,
+    });
   }
 
   async getStressTestLibrary(): Promise<object> {

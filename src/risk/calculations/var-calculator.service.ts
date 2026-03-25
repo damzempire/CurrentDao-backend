@@ -14,7 +14,9 @@ export class VarCalculatorService {
   ) {}
 
   async calculateVar(varDto: VarCalculationDto): Promise<object> {
-    this.logger.log(`Calculating VaR for portfolio: ${varDto.portfolioId}, Method: ${varDto.method}`);
+    this.logger.log(
+      `Calculating VaR for portfolio: ${varDto.portfolioId}, Method: ${varDto.method}`,
+    );
 
     const startTime = Date.now();
 
@@ -34,16 +36,20 @@ export class VarCalculatorService {
     }
 
     const processingTime = Date.now() - startTime;
-    
+
     // Ensure calculation is under 200ms as per requirements
     if (processingTime > 200) {
-      this.logger.warn(`VaR calculation exceeded 200ms threshold: ${processingTime}ms`);
+      this.logger.warn(
+        `VaR calculation exceeded 200ms threshold: ${processingTime}ms`,
+      );
     }
 
     // Update risk data with VaR results
     await this.updateRiskDataWithVar(varDto.portfolioId, varResult);
 
-    this.logger.log(`VaR calculation completed for ${varDto.portfolioId}: ${varResult.varValue} (${varDto.confidence * 100}% confidence)`);
+    this.logger.log(
+      `VaR calculation completed for ${varDto.portfolioId}: ${varResult.varValue} (${varDto.confidence * 100}% confidence)`,
+    );
 
     return {
       ...varResult,
@@ -52,26 +58,33 @@ export class VarCalculatorService {
     };
   }
 
-  private async calculateHistoricalVaR(varDto: VarCalculationDto): Promise<object> {
+  private async calculateHistoricalVaR(
+    varDto: VarCalculationDto,
+  ): Promise<object> {
     const { portfolioId, confidence, timeHorizon } = varDto;
-    
+
     // Get historical returns for the portfolio
     const historicalReturns = await this.getHistoricalReturns(portfolioId);
-    
+
     // Calculate returns for the time horizon
-    const horizonReturns = this.calculateHorizonReturns(historicalReturns, timeHorizon);
-    
+    const horizonReturns = this.calculateHorizonReturns(
+      historicalReturns,
+      timeHorizon,
+    );
+
     // Sort returns to find percentile
     horizonReturns.sort((a, b) => a - b);
-    
+
     // Calculate VaR at the specified confidence level
-    const percentileIndex = Math.floor((1 - confidence) * horizonReturns.length);
+    const percentileIndex = Math.floor(
+      (1 - confidence) * horizonReturns.length,
+    );
     const varReturn = horizonReturns[percentileIndex];
-    
+
     // Get current portfolio value
     const portfolioValue = await this.getPortfolioValue(portfolioId);
     const varValue = Math.abs(varReturn * portfolioValue);
-    
+
     return {
       method: 'historical',
       varValue,
@@ -93,25 +106,27 @@ export class VarCalculatorService {
     };
   }
 
-  private async calculateParametricVaR(varDto: VarCalculationDto): Promise<object> {
+  private async calculateParametricVaR(
+    varDto: VarCalculationDto,
+  ): Promise<object> {
     const { portfolioId, confidence, timeHorizon } = varDto;
-    
+
     // Get portfolio statistics
     const returns = await this.getHistoricalReturns(portfolioId);
     const mean = this.calculateMean(returns);
     const volatility = this.calculateVolatility(returns);
-    
+
     // Calculate z-score for the confidence level
     const zScore = this.getZScore(confidence);
-    
+
     // Calculate parametric VaR
     const timeAdjustedVolatility = volatility * Math.sqrt(timeHorizon);
     const timeAdjustedMean = mean * timeHorizon;
     const varReturn = timeAdjustedMean - zScore * timeAdjustedVolatility;
-    
+
     const portfolioValue = await this.getPortfolioValue(portfolioId);
     const varValue = Math.abs(varReturn * portfolioValue);
-    
+
     return {
       method: 'parametric',
       varValue,
@@ -139,27 +154,41 @@ export class VarCalculatorService {
     };
   }
 
-  private async calculateMonteCarloVaR(varDto: VarCalculationDto): Promise<object> {
-    const { portfolioId, confidence, timeHorizon, simulations = 10000 } = varDto;
-    
+  private async calculateMonteCarloVaR(
+    varDto: VarCalculationDto,
+  ): Promise<object> {
+    const {
+      portfolioId,
+      confidence,
+      timeHorizon,
+      simulations = 10000,
+    } = varDto;
+
     // Get portfolio parameters
     const returns = await this.getHistoricalReturns(portfolioId);
     const mean = this.calculateMean(returns);
     const volatility = this.calculateVolatility(returns);
-    
+
     // Generate Monte Carlo simulations
-    const simulatedReturns = this.runMonteCarloSimulation(mean, volatility, timeHorizon, simulations);
-    
+    const simulatedReturns = this.runMonteCarloSimulation(
+      mean,
+      volatility,
+      timeHorizon,
+      simulations,
+    );
+
     // Sort simulated returns
     simulatedReturns.sort((a, b) => a - b);
-    
+
     // Calculate VaR at the specified confidence level
-    const percentileIndex = Math.floor((1 - confidence) * simulatedReturns.length);
+    const percentileIndex = Math.floor(
+      (1 - confidence) * simulatedReturns.length,
+    );
     const varReturn = simulatedReturns[percentileIndex];
-    
+
     const portfolioValue = await this.getPortfolioValue(portfolioId);
     const varValue = Math.abs(varReturn * portfolioValue);
-    
+
     return {
       method: 'monte_carlo',
       varValue,
@@ -190,13 +219,13 @@ export class VarCalculatorService {
   private async getHistoricalReturns(portfolioId: string): Promise<number[]> {
     // Get historical returns for the portfolio
     // In production, this would query actual historical data
-    const returns = [];
-    
+    const returns: number[] = [];
+
     // Generate sample historical returns (252 trading days = 1 year)
     for (let i = 0; i < 252; i++) {
       returns.push(this.generateRandomReturn(0.0005, 0.02)); // 0.05% daily return, 2% daily volatility
     }
-    
+
     return returns;
   }
 
@@ -208,10 +237,13 @@ export class VarCalculatorService {
     return mean + volatility * z;
   }
 
-  private calculateHorizonReturns(returns: number[], timeHorizon: number): number[] {
+  private calculateHorizonReturns(
+    returns: number[],
+    timeHorizon: number,
+  ): number[] {
     // Calculate compounded returns over the time horizon
-    const horizonReturns = [];
-    
+    const horizonReturns: number[] = [];
+
     for (let i = 0; i <= returns.length - timeHorizon; i++) {
       let horizonReturn = 0;
       for (let j = 0; j < timeHorizon; j++) {
@@ -219,14 +251,14 @@ export class VarCalculatorService {
       }
       horizonReturns.push(horizonReturn);
     }
-    
+
     return horizonReturns;
   }
 
   private getZScore(confidence: number): number {
     // Get z-score for normal distribution
     const zScores = {
-      0.90: 1.282,
+      0.9: 1.282,
       0.95: 1.645,
       0.96: 1.751,
       0.97: 1.881,
@@ -237,19 +269,24 @@ export class VarCalculatorService {
     return zScores[confidence] || 1.645;
   }
 
-  private runMonteCarloSimulation(mean: number, volatility: number, timeHorizon: number, simulations: number): number[] {
-    const simulatedReturns = [];
-    
+  private runMonteCarloSimulation(
+    mean: number,
+    volatility: number,
+    timeHorizon: number,
+    simulations: number,
+  ): number[] {
+    const simulatedReturns: number[] = [];
+
     for (let i = 0; i < simulations; i++) {
       let totalReturn = 0;
-      
+
       for (let j = 0; j < timeHorizon; j++) {
         totalReturn += this.generateRandomReturn(mean, volatility);
       }
-      
+
       simulatedReturns.push(totalReturn);
     }
-    
+
     return simulatedReturns;
   }
 
@@ -265,37 +302,44 @@ export class VarCalculatorService {
 
   private calculateVolatility(returns: number[]): number {
     const mean = this.calculateMean(returns);
-    const squaredDiffs = returns.map(ret => Math.pow(ret - mean, 2));
-    const variance = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / returns.length;
+    const squaredDiffs = returns.map((ret) => Math.pow(ret - mean, 2));
+    const variance =
+      squaredDiffs.reduce((sum, diff) => sum + diff, 0) / returns.length;
     return Math.sqrt(variance);
   }
 
   private calculateSkewness(returns: number[]): number {
     const mean = this.calculateMean(returns);
     const volatility = this.calculateVolatility(returns);
-    const cubedDiffs = returns.map(ret => Math.pow((ret - mean) / volatility, 3));
+    const cubedDiffs = returns.map((ret) =>
+      Math.pow((ret - mean) / volatility, 3),
+    );
     return cubedDiffs.reduce((sum, diff) => sum + diff, 0) / returns.length;
   }
 
   private calculateKurtosis(returns: number[]): number {
     const mean = this.calculateMean(returns);
     const volatility = this.calculateVolatility(returns);
-    const fourthPowerDiffs = returns.map(ret => Math.pow((ret - mean) / volatility, 4));
-    return fourthPowerDiffs.reduce((sum, diff) => sum + diff, 0) / returns.length;
+    const fourthPowerDiffs = returns.map((ret) =>
+      Math.pow((ret - mean) / volatility, 4),
+    );
+    return (
+      fourthPowerDiffs.reduce((sum, diff) => sum + diff, 0) / returns.length
+    );
   }
 
   private calculateMaxDrawdown(returns: number[]): number {
     let maxDrawdown = 0;
     let peak = 0;
     let cumulativeReturn = 0;
-    
+
     for (const ret of returns) {
       cumulativeReturn += ret;
       peak = Math.max(peak, cumulativeReturn);
       const drawdown = peak - cumulativeReturn;
       maxDrawdown = Math.max(maxDrawdown, drawdown);
     }
-    
+
     return maxDrawdown;
   }
 
@@ -305,7 +349,7 @@ export class VarCalculatorService {
       p1: sortedReturns[Math.floor(0.01 * sortedReturns.length)],
       p5: sortedReturns[Math.floor(0.05 * sortedReturns.length)],
       p25: sortedReturns[Math.floor(0.25 * sortedReturns.length)],
-      p50: sortedReturns[Math.floor(0.50 * sortedReturns.length)],
+      p50: sortedReturns[Math.floor(0.5 * sortedReturns.length)],
       p75: sortedReturns[Math.floor(0.75 * sortedReturns.length)],
       p95: sortedReturns[Math.floor(0.95 * sortedReturns.length)],
       p99: sortedReturns[Math.floor(0.99 * sortedReturns.length)],
@@ -317,63 +361,78 @@ export class VarCalculatorService {
     const sampleSize = Math.min(1000, returns.length);
     const firstHalf = returns.slice(0, sampleSize / 2);
     const secondHalf = returns.slice(sampleSize / 2, sampleSize);
-    
+
     const firstMean = this.calculateMean(firstHalf);
     const secondMean = this.calculateMean(secondHalf);
-    
+
     // Check if means are within 5% of each other
     const difference = Math.abs(firstMean - secondMean);
     const average = (firstMean + secondMean) / 2;
-    
-    return (difference / Math.abs(average)) < 0.05;
+
+    return difference / Math.abs(average) < 0.05;
   }
 
-  private async calculateVarAccuracy(portfolioId: string, varResult: object): Promise<number> {
+  private async calculateVarAccuracy(
+    portfolioId: string,
+    varResult: Record<string, any>,
+  ): Promise<number> {
     // Calculate VaR accuracy by backtesting
     const backtestResults = await this.backtestVar(portfolioId, varResult);
-    
+
     // Accuracy is 1 minus the breach rate difference from expected
     const expectedBreachRate = 1 - varResult['confidence'];
     const actualBreachRate = backtestResults.breachRate;
-    
+
     return Math.max(0, 1 - Math.abs(expectedBreachRate - actualBreachRate));
   }
 
-  private async backtestVar(portfolioId: string, varResult: object): Promise<object> {
+  private async backtestVar(
+    portfolioId: string,
+    varResult: Record<string, any>,
+  ): Promise<Record<string, any>> {
     // Backtest VaR model against historical data
     const historicalReturns = await this.getHistoricalReturns(portfolioId);
     const varThreshold = varResult['varReturn'];
-    
+
     let breaches = 0;
     for (const ret of historicalReturns) {
       if (ret < varThreshold) {
         breaches++;
       }
     }
-    
+
     const breachRate = breaches / historicalReturns.length;
-    
+
     return {
       breaches,
       totalObservations: historicalReturns.length,
       breachRate,
       expectedBreachRate: 1 - varResult['confidence'],
-      kupiecPValue: this.calculateKupiecPValue(breaches, historicalReturns.length, 1 - varResult['confidence']),
+      kupiecPValue: this.calculateKupiecPValue(
+        breaches,
+        historicalReturns.length,
+        1 - varResult['confidence'],
+      ),
     };
   }
 
-  private calculateKupiecPValue(breaches: number, observations: number, expectedBreachRate: number): number {
+  private calculateKupiecPValue(
+    breaches: number,
+    observations: number,
+    expectedBreachRate: number,
+  ): number {
     // Calculate Kupiec test p-value for VaR model validation
     const actualBreachRate = breaches / observations;
-    
+
     if (breaches === 0) return 1;
-    
+
     // Likelihood ratio test statistic
-    const lr = 2 * (
-      breaches * Math.log(actualBreachRate / expectedBreachRate) +
-      (observations - breaches) * Math.log((1 - actualBreachRate) / (1 - expectedBreachRate))
-    );
-    
+    const lr =
+      2 *
+      (breaches * Math.log(actualBreachRate / expectedBreachRate) +
+        (observations - breaches) *
+          Math.log((1 - actualBreachRate) / (1 - expectedBreachRate)));
+
     // Chi-square distribution with 1 degree of freedom
     return 1 - this.chiSquareCDF(lr, 1);
   }
@@ -384,24 +443,34 @@ export class VarCalculatorService {
     return Math.min(1, x / (df + Math.sqrt(2 * df)));
   }
 
-  private async updateRiskDataWithVar(portfolioId: string, varResult: object): Promise<void> {
-    await this.riskDataRepository.update(
-      { 
-        portfolioId, 
-        createdAt: () => 'SELECT MAX(created_at) FROM risk_data WHERE portfolioId = :portfolioId' 
-      },
-      { 
-        varValue: varResult['varValue'],
-        varConfidence: varResult['confidence'],
-      }
-    );
+  private async updateRiskDataWithVar(
+    portfolioId: string,
+    varResult: Record<string, any>,
+  ): Promise<void> {
+    const latestRiskData = await this.riskDataRepository.findOne({
+      where: { portfolioId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!latestRiskData) {
+      return;
+    }
+
+    await this.riskDataRepository.update(latestRiskData.id, {
+      varValue: varResult['varValue'],
+      varConfidence: varResult['confidence'],
+    });
   }
 
-  async compareVarMethods(portfolioId: string, confidence: number, timeHorizon: number): Promise<object> {
+  async compareVarMethods(
+    portfolioId: string,
+    confidence: number,
+    timeHorizon: number,
+  ): Promise<Record<string, any>> {
     this.logger.log(`Comparing VaR methods for portfolio: ${portfolioId}`);
 
     const methods = ['historical', 'parametric', 'monte_carlo'] as const;
-    const results = {};
+    const results: Record<string, any> = {};
 
     for (const method of methods) {
       const varDto: VarCalculationDto = {
@@ -421,9 +490,11 @@ export class VarCalculatorService {
       timeHorizon,
       results,
       comparison: {
-        lowestVar: Math.min(...Object.values(results).map(r => r.varValue)),
-        highestVar: Math.max(...Object.values(results).map(r => r.varValue)),
-        variance: this.calculateVariance(Object.values(results).map(r => r.varValue)),
+        lowestVar: Math.min(...Object.values(results).map((r) => r.varValue)),
+        highestVar: Math.max(...Object.values(results).map((r) => r.varValue)),
+        variance: this.calculateVariance(
+          Object.values(results).map((r) => r.varValue),
+        ),
         recommendation: this.getVarRecommendation(results),
       },
     };
@@ -431,11 +502,11 @@ export class VarCalculatorService {
 
   private calculateVariance(values: number[]): number {
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+    const squaredDiffs = values.map((val) => Math.pow(val - mean, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
   }
 
-  private getVarRecommendation(results: object): string {
+  private getVarRecommendation(results: Record<string, any>): string {
     const historical = results['historical'];
     const parametric = results['parametric'];
     const monteCarlo = results['monte_carlo'];
@@ -447,8 +518,9 @@ export class VarCalculatorService {
       monte_carlo: monteCarlo.accuracy,
     };
 
-    const bestMethod = Object.entries(accuracyScores)
-      .sort(([,a], [,b]) => b - a)[0][0];
+    const bestMethod = Object.entries(accuracyScores).sort(
+      ([, a], [, b]) => b - a,
+    )[0][0];
 
     return `Use ${bestMethod} method - highest accuracy: ${accuracyScores[bestMethod]}`;
   }

@@ -22,22 +22,39 @@ export class RealTimeMonitorService {
   ) {}
 
   async startMonitoring(monitoringDto: RiskMonitoringDto): Promise<void> {
-    const { portfolioId, varConfidence = 0.95, timeHorizon = 10, enableRealTimeAlerts = true } = monitoringDto;
+    const {
+      portfolioId,
+      varConfidence = 0.95,
+      timeHorizon = 10,
+      enableRealTimeAlerts = true,
+    } = monitoringDto;
 
-    this.logger.log(`Starting real-time monitoring for portfolio: ${portfolioId}`);
+    this.logger.log(
+      `Starting real-time monitoring for portfolio: ${portfolioId}`,
+    );
 
     // Clear existing monitoring for this portfolio
     this.stopMonitoring(portfolioId);
 
     // Set up monitoring interval (every 10 seconds as per requirements)
     const interval = setInterval(async () => {
-      await this.performRiskCheck(portfolioId, varConfidence, timeHorizon, enableRealTimeAlerts);
+      await this.performRiskCheck(
+        portfolioId,
+        varConfidence,
+        timeHorizon,
+        enableRealTimeAlerts,
+      );
     }, 10000);
 
     this.monitoringIntervals.set(portfolioId, interval);
 
     // Perform initial check
-    await this.performRiskCheck(portfolioId, varConfidence, timeHorizon, enableRealTimeAlerts);
+    await this.performRiskCheck(
+      portfolioId,
+      varConfidence,
+      timeHorizon,
+      enableRealTimeAlerts,
+    );
   }
 
   async stopMonitoring(portfolioId: string): Promise<void> {
@@ -57,22 +74,30 @@ export class RealTimeMonitorService {
   ): Promise<void> {
     try {
       const startTime = Date.now();
-      
+
       // Get latest risk data
       const latestRiskData = await this.getLatestRiskData(portfolioId);
-      
+
       if (!latestRiskData) {
         this.logger.warn(`No risk data found for portfolio: ${portfolioId}`);
         return;
       }
 
       // Calculate current risk metrics
-      const currentRiskLevel = await this.calculateCurrentRiskLevel(portfolioId);
-      const varValue = await this.calculateRealTimeVaR(portfolioId, varConfidence, timeHorizon);
-      
+      const currentRiskLevel =
+        await this.calculateCurrentRiskLevel(portfolioId);
+      const varValue = await this.calculateRealTimeVaR(
+        portfolioId,
+        varConfidence,
+        timeHorizon,
+      );
+
       // Check for risk breaches
-      const riskBreach = await this.checkRiskThresholds(currentRiskLevel, latestRiskData.riskLevel);
-      
+      const riskBreach = await this.checkRiskThresholds(
+        currentRiskLevel,
+        latestRiskData.riskLevel,
+      );
+
       if (riskBreach.hasBreach && enableRealTimeAlerts) {
         await this.triggerRiskAlert(portfolioId, riskBreach);
       }
@@ -86,32 +111,42 @@ export class RealTimeMonitorService {
       });
 
       const processingTime = Date.now() - startTime;
-      this.logger.debug(`Risk check completed for ${portfolioId} in ${processingTime}ms`);
+      this.logger.debug(
+        `Risk check completed for ${portfolioId} in ${processingTime}ms`,
+      );
 
       // Ensure processing time is under 200ms as per requirements
       if (processingTime > 200) {
-        this.logger.warn(`Risk check exceeded 200ms threshold: ${processingTime}ms`);
+        this.logger.warn(
+          `Risk check exceeded 200ms threshold: ${processingTime}ms`,
+        );
       }
-
     } catch (error) {
-      this.logger.error(`Error during risk check for portfolio ${portfolioId}:`, error);
+      this.logger.error(
+        `Error during risk check for portfolio ${portfolioId}:`,
+        error,
+      );
     }
   }
 
-  private async getLatestRiskData(portfolioId: string): Promise<RiskDataEntity | null> {
+  private async getLatestRiskData(
+    portfolioId: string,
+  ): Promise<RiskDataEntity | null> {
     return this.riskDataRepository.findOne({
       where: { portfolioId },
       order: { createdAt: 'DESC' },
     });
   }
 
-  private async calculateCurrentRiskLevel(portfolioId: string): Promise<number> {
+  private async calculateCurrentRiskLevel(
+    portfolioId: string,
+  ): Promise<number> {
     // Simulate real-time risk calculation
     // In production, this would pull live market data and calculate actual risk
     const baseRisk = 2.0; // Medium risk baseline
     const volatility = Math.random() * 0.5 - 0.25; // Random volatility ±25%
     const marketStress = this.getMarketStressFactor();
-    
+
     return Math.max(1, Math.min(4, baseRisk + volatility + marketStress));
   }
 
@@ -126,7 +161,7 @@ export class RealTimeMonitorService {
     const volatility = 0.2; // 20% annual volatility
     const timeAdjustment = Math.sqrt(timeHorizon / 252); // Trading days adjustment
     const confidenceFactor = this.getConfidenceFactor(confidence);
-    
+
     return portfolioValue * volatility * timeAdjustment * confidenceFactor;
   }
 
@@ -155,14 +190,17 @@ export class RealTimeMonitorService {
     return Math.max(-0.5, (vix - 20) / 40); // Normalize to -0.5 to 0.5
   }
 
-  private async checkRiskThresholds(currentRisk: number, previousRisk: number): Promise<{
+  private async checkRiskThresholds(
+    currentRisk: number,
+    previousRisk: number,
+  ): Promise<{
     hasBreach: boolean;
     breachType: string;
     severity: string;
   }> {
     const riskIncrease = currentRisk - previousRisk;
     const thresholdIncrease = 0.5; // Alert on 0.5 point increase
-    
+
     if (currentRisk >= this.riskThresholds.critical) {
       return {
         hasBreach: true,
@@ -170,7 +208,7 @@ export class RealTimeMonitorService {
         severity: 'CRITICAL',
       };
     }
-    
+
     if (currentRisk >= this.riskThresholds.high) {
       return {
         hasBreach: true,
@@ -178,7 +216,7 @@ export class RealTimeMonitorService {
         severity: 'HIGH',
       };
     }
-    
+
     if (riskIncrease >= thresholdIncrease) {
       return {
         hasBreach: true,
@@ -186,7 +224,7 @@ export class RealTimeMonitorService {
         severity: currentRisk >= 3 ? 'HIGH' : 'MEDIUM',
       };
     }
-    
+
     return {
       hasBreach: false,
       breachType: 'NONE',
@@ -194,14 +232,17 @@ export class RealTimeMonitorService {
     };
   }
 
-  private async triggerRiskAlert(portfolioId: string, riskBreach: any): Promise<void> {
+  private async triggerRiskAlert(
+    portfolioId: string,
+    riskBreach: any,
+  ): Promise<void> {
     this.logger.warn(
       `RISK ALERT - Portfolio: ${portfolioId}, Type: ${riskBreach.breachType}, Severity: ${riskBreach.severity}`,
     );
 
     // In production, this would send notifications via various channels
     // Email, SMS, Slack, dashboard alerts, etc.
-    
+
     const alertData = {
       portfolioId,
       alertType: riskBreach.breachType,
@@ -219,20 +260,29 @@ export class RealTimeMonitorService {
     this.logger.log(`Risk alert stored: ${JSON.stringify(alertData)}`);
   }
 
-  private async updateRiskMetrics(portfolioId: string, metrics: object): Promise<void> {
-    await this.riskDataRepository.update(
-      { portfolioId, createdAt: () => 'SELECT MAX(created_at) FROM risk_data WHERE portfolioId = :portfolioId' },
-      metrics,
-    );
+  private async updateRiskMetrics(
+    portfolioId: string,
+    metrics: object,
+  ): Promise<void> {
+    const latestRiskData = await this.riskDataRepository.findOne({
+      where: { portfolioId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!latestRiskData) {
+      return;
+    }
+
+    await this.riskDataRepository.update(latestRiskData.id, metrics);
   }
 
   // Cron job for daily risk summaries
   @Cron('0 0 * * *') // At midnight every day
   async generateDailyRiskSummary(): Promise<void> {
     this.logger.log('Generating daily risk summary');
-    
+
     const activePortfolios = await this.getActivePortfolios();
-    
+
     for (const portfolioId of activePortfolios) {
       await this.generatePortfolioRiskSummary(portfolioId);
     }
@@ -243,7 +293,9 @@ export class RealTimeMonitorService {
     return Array.from(this.monitoringIntervals.keys());
   }
 
-  private async generatePortfolioRiskSummary(portfolioId: string): Promise<void> {
+  private async generatePortfolioRiskSummary(
+    portfolioId: string,
+  ): Promise<void> {
     // Generate daily risk summary for each portfolio
     const summary = {
       portfolioId,
@@ -254,7 +306,9 @@ export class RealTimeMonitorService {
       alertsTriggered: await this.getAlertCount(portfolioId),
     };
 
-    this.logger.log(`Daily risk summary for ${portfolioId}: ${JSON.stringify(summary)}`);
+    this.logger.log(
+      `Daily risk summary for ${portfolioId}: ${JSON.stringify(summary)}`,
+    );
   }
 
   private async getMaxRiskLevel(portfolioId: string): Promise<number> {

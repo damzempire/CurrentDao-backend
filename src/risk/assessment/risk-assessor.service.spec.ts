@@ -29,7 +29,9 @@ describe('RiskAssessorService', () => {
     }).compile();
 
     service = module.get<RiskAssessorService>(RiskAssessorService);
-    repository = module.get<Repository<RiskDataEntity>>(getRepositoryToken(RiskDataEntity));
+    repository = module.get<Repository<RiskDataEntity>>(
+      getRepositoryToken(RiskDataEntity),
+    );
   });
 
   afterEach(() => {
@@ -59,7 +61,11 @@ describe('RiskAssessorService', () => {
         stressTestResult: {},
         hedgingStrategy: {},
         mitigationActions: {
-          actions: ['Increased monitoring frequency', 'Implement basic hedging', 'Monthly review'],
+          actions: [
+            'Increased monitoring frequency',
+            'Implement basic hedging',
+            'Monthly review',
+          ],
           priority: 2,
           implementation: '14 days',
         },
@@ -119,12 +125,12 @@ describe('RiskAssessorService', () => {
         id: 'test-id',
         portfolioId: 'test-portfolio',
         riskType: RiskType.OPERATIONAL,
-        riskLevel: expect.any(Number),
+        riskLevel: 2,
         varValue: 0,
         varConfidence: 0.95,
         stressTestResult: {},
         hedgingStrategy: {},
-        mitigationActions: expect.any(Object),
+        mitigationActions: {},
         complianceStatus: 'pending',
         createdBy: 'risk-assessor',
       };
@@ -152,7 +158,8 @@ describe('RiskAssessorService', () => {
       const riskLevel = await service['calculateRiskLevel'](riskAssessmentDto);
 
       expect(riskLevel).toBeDefined();
-      expect(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).toContain(riskLevel);
+      expect(riskLevel).toBeGreaterThanOrEqual(1);
+      expect(riskLevel).toBeLessThanOrEqual(4);
     });
 
     it('should return correct risk level for credit risk', async () => {
@@ -166,7 +173,8 @@ describe('RiskAssessorService', () => {
       const riskLevel = await service['calculateRiskLevel'](riskAssessmentDto);
 
       expect(riskLevel).toBeDefined();
-      expect(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).toContain(riskLevel);
+      expect(riskLevel).toBeGreaterThanOrEqual(1);
+      expect(riskLevel).toBeLessThanOrEqual(4);
     });
   });
 
