@@ -1,3 +1,4 @@
+import { AssetModule } from './assets/asset.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,11 +18,13 @@ import { ShardingModule } from './database/sharding/sharding.module';
 import { ContractsModule } from './contracts/contracts.module';
 import { ApiGatewayModule } from './gateway/api-gateway.module';
 import { MultisigModule } from './multisig/multisig.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 @Module({
   imports: [
+    AssetModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, stellarConfig],
@@ -46,6 +49,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ContractsModule,
     ApiGatewayModule,
     MultisigModule,
+    MonitoringModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
