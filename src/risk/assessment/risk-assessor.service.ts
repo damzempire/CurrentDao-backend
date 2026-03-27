@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RiskDataEntity } from '../entities/risk-data.entity';
-import { RiskAssessmentDto, RiskType, RiskLevel } from '../dto/risk-assessment.dto';
+import {
+  RiskAssessmentDto,
+  RiskType,
+  RiskLevel,
+} from '../dto/risk-assessment.dto';
 
 @Injectable()
 export class RiskAssessorService {
@@ -13,11 +17,18 @@ export class RiskAssessorService {
     private readonly riskDataRepository: Repository<RiskDataEntity>,
   ) {}
 
-  async assessRisk(riskAssessmentDto: RiskAssessmentDto): Promise<RiskDataEntity> {
-    this.logger.log(`Starting risk assessment for portfolio: ${riskAssessmentDto.portfolioId}`);
+  async assessRisk(
+    riskAssessmentDto: RiskAssessmentDto,
+  ): Promise<RiskDataEntity> {
+    this.logger.log(
+      `Starting risk assessment for portfolio: ${riskAssessmentDto.portfolioId}`,
+    );
 
     const riskLevel = await this.calculateRiskLevel(riskAssessmentDto);
-    const riskScore = await this.calculateRiskScore(riskAssessmentDto, riskLevel);
+    const riskScore = await this.calculateRiskScore(
+      riskAssessmentDto,
+      riskLevel,
+    );
 
     const riskData = this.riskDataRepository.create({
       portfolioId: riskAssessmentDto.portfolioId,
@@ -27,20 +38,28 @@ export class RiskAssessorService {
       varConfidence: 0.95,
       stressTestResult: {},
       hedgingStrategy: {},
-      mitigationActions: await this.generateMitigationActions(riskLevel, riskAssessmentDto.riskType),
+      mitigationActions: await this.generateMitigationActions(
+        riskLevel,
+        riskAssessmentDto.riskType,
+      ),
       complianceStatus: 'pending',
       createdBy: 'risk-assessor',
     });
 
     const savedRiskData = await this.riskDataRepository.save(riskData);
-    
-    this.logger.log(`Risk assessment completed for portfolio: ${riskAssessmentDto.portfolioId}, Risk Level: ${riskLevel}`);
-    
+
+    this.logger.log(
+      `Risk assessment completed for portfolio: ${riskAssessmentDto.portfolioId}, Risk Level: ${riskLevel}`,
+    );
+
     return savedRiskData;
   }
 
-  async calculateRiskLevel(riskAssessmentDto: RiskAssessmentDto): Promise<RiskLevel> {
-    const { portfolioValue, riskType, marketData, historicalData } = riskAssessmentDto;
+  async calculateRiskLevel(
+    riskAssessmentDto: RiskAssessmentDto,
+  ): Promise<RiskLevel> {
+    const { portfolioValue, riskType, marketData, historicalData } =
+      riskAssessmentDto;
 
     let riskScore = 0;
 
@@ -50,7 +69,10 @@ export class RiskAssessorService {
         riskScore = await this.calculateMarketRisk(portfolioValue, marketData);
         break;
       case RiskType.CREDIT:
-        riskScore = await this.calculateCreditRisk(portfolioValue, historicalData);
+        riskScore = await this.calculateCreditRisk(
+          portfolioValue,
+          historicalData,
+        );
         break;
       case RiskType.OPERATIONAL:
         riskScore = await this.calculateOperationalRisk(portfolioValue);
@@ -72,52 +94,73 @@ export class RiskAssessorService {
     return RiskLevel.CRITICAL;
   }
 
-  private async calculateRiskScore(riskAssessmentDto: RiskAssessmentDto, riskLevel: RiskLevel): Promise<number> {
+  private async calculateRiskScore(
+    riskAssessmentDto: RiskAssessmentDto,
+    riskLevel: RiskLevel,
+  ): Promise<number> {
     // Convert risk level to numerical score (1-4)
     return riskLevel;
   }
 
-  private async calculateMarketRisk(portfolioValue: number, marketData?: object): Promise<number> {
+  private async calculateMarketRisk(
+    portfolioValue: number,
+    marketData?: object,
+  ): Promise<number> {
     // Simplified market risk calculation
     const volatility = marketData?.['volatility'] || 0.2;
     const beta = marketData?.['beta'] || 1.0;
-    
-    const riskScore = (volatility * beta * Math.log(portfolioValue / 1000000)) / 2;
+
+    const riskScore =
+      (volatility * beta * Math.log(portfolioValue / 1000000)) / 2;
     return Math.max(1, Math.min(4, riskScore));
   }
 
-  private async calculateCreditRisk(portfolioValue: number, historicalData?: object): Promise<number> {
+  private async calculateCreditRisk(
+    portfolioValue: number,
+    historicalData?: object,
+  ): Promise<number> {
     // Simplified credit risk calculation
     const defaultRate = historicalData?.['defaultRate'] || 0.02;
     const recoveryRate = historicalData?.['recoveryRate'] || 0.4;
-    
-    const riskScore = (defaultRate * (1 - recoveryRate) * Math.log(portfolioValue / 1000000)) / 1.5;
+
+    const riskScore =
+      (defaultRate * (1 - recoveryRate) * Math.log(portfolioValue / 1000000)) /
+      1.5;
     return Math.max(1, Math.min(4, riskScore));
   }
 
-  private async calculateOperationalRisk(portfolioValue: number): Promise<number> {
+  private async calculateOperationalRisk(
+    portfolioValue: number,
+  ): Promise<number> {
     // Simplified operational risk calculation
     const complexityFactor = Math.log(portfolioValue / 1000000) / 10;
     const riskScore = 1.5 + complexityFactor;
     return Math.max(1, Math.min(4, riskScore));
   }
 
-  private async calculateLiquidityRisk(portfolioValue: number): Promise<number> {
+  private async calculateLiquidityRisk(
+    portfolioValue: number,
+  ): Promise<number> {
     // Simplified liquidity risk calculation
     const sizeFactor = Math.log(portfolioValue / 1000000) / 8;
     const riskScore = 1.2 + sizeFactor;
     return Math.max(1, Math.min(4, riskScore));
   }
 
-  private async calculateRegulatoryRisk(portfolioValue: number): Promise<number> {
+  private async calculateRegulatoryRisk(
+    portfolioValue: number,
+  ): Promise<number> {
     // Simplified regulatory risk calculation
     const jurisdictionFactor = 1.5; // Based on cross-border complexity
     const riskScore = jurisdictionFactor;
     return Math.max(1, Math.min(4, riskScore));
   }
 
-  private async generateMitigationActions(riskLevel: RiskLevel, riskType: RiskType): Promise<object> {
-    const actions = [];
+  private async generateMitigationActions(
+    riskLevel: RiskLevel,
+    riskType: RiskType,
+  ): Promise<object> {
+    const actions: string[] = [];
 
     switch (riskLevel) {
       case RiskLevel.LOW:
@@ -177,11 +220,16 @@ export class RiskAssessorService {
 
   private getImplementationTimeline(riskLevel: RiskLevel): string {
     switch (riskLevel) {
-      case RiskLevel.LOW: return '30 days';
-      case RiskLevel.MEDIUM: return '14 days';
-      case RiskLevel.HIGH: return '7 days';
-      case RiskLevel.CRITICAL: return '24 hours';
-      default: return '30 days';
+      case RiskLevel.LOW:
+        return '30 days';
+      case RiskLevel.MEDIUM:
+        return '14 days';
+      case RiskLevel.HIGH:
+        return '7 days';
+      case RiskLevel.CRITICAL:
+        return '24 hours';
+      default:
+        return '30 days';
     }
   }
 
@@ -192,7 +240,10 @@ export class RiskAssessorService {
     });
   }
 
-  async updateRiskAssessment(id: string, updates: Partial<RiskDataEntity>): Promise<RiskDataEntity> {
+  async updateRiskAssessment(
+    id: string,
+    updates: Partial<RiskDataEntity>,
+  ): Promise<RiskDataEntity | null> {
     await this.riskDataRepository.update(id, updates);
     return this.riskDataRepository.findOne({ where: { id } });
   }

@@ -1,7 +1,7 @@
 export class CreateEnergyTradeDto {
-  sellerId: string
-  buyerId: string
-  amount: number
-  price: number
-  type: 'buy' | 'sell'
+  sellerId: string;
+  buyerId: string;
+  amount: number;
+  price: number;
+  type: 'buy' | 'sell';
 }

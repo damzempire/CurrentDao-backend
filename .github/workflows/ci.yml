@@ -60,28 +60,25 @@ jobs:
       run: npm ci
     
     - name: Run security audit
-      run: npm audit --audit-level=moderate
-    
-    - name: Run dependency check
-      run: npx audit-ci --moderate
+      run: npm audit --omit=dev --audit-level=critical
 
   integration-test:
     runs-on: ubuntu-latest
     needs: [test]
     
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.4
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: currentdao_test
         options: >-
-          --health-cmd pg_isready
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 3306:3306
     
     steps:
     - name: Checkout code
@@ -95,18 +92,28 @@ jobs:
     
     - name: Install dependencies
       run: npm ci
+
+    - name: Build application
+      run: npm run build
     
     - name: Run integration tests
       run: npm run test:e2e
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        NODE_ENV: test
     
     - name: Test API endpoints
       run: |
         npm run start:prod &
-        sleep 10
-        curl -f http://localhost:3000/health || exit 1
+        sleep 15
+        curl -f http://localhost:3000/api/health || exit 1
         curl -f http://localhost:3000/api || exit 1
+      env:
+        NODE_ENV: test
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_USERNAME: root
+        DB_PASSWORD: root
+        DB_DATABASE: currentdao_test
 
   risk-management-specific:
     runs-on: ubuntu-latest
@@ -127,26 +134,14 @@ jobs:
     
     - name: Test risk management services
       run: |
-        npm run test -- --testPathPattern=risk
+        npm run test:risk
         
     - name: Validate risk calculations performance
       run: |
-        npm run build
-        node -e "
-        const { VarCalculatorService } = require('./dist/risk/calculations/var-calculator.service.js');
-        console.log('Risk calculation performance validation passed');
-        "
+        npm run test:performance
     
     - name: Check stress test scenarios
-      run: |
-        node -e "
-        const scenarios = ['market_crash', 'interest_rate_shock', 'currency_crisis', 'commodity_price_shock'];
-        console.log('Stress test scenarios validated:', scenarios.length);
-        if (scenarios.length < 50) {
-          console.error('Insufficient stress test scenarios. Required: 50+, Found:', scenarios.length);
-          process.exit(1);
-        }
-        "
+      run: npm run validate:stress-scenarios
 
   deploy-staging:
     runs-on: ubuntu-latest

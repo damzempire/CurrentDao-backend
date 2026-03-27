@@ -1,29 +1,29 @@
-import { Injectable } from '@nestjs/common'
-import { Proposal } from './entities/proposal.entity'
+import { Injectable } from '@nestjs/common';
+import { Proposal } from './entities/proposal.entity';
 
 export interface CreateProposalDto {
-  title: string
-  description: string
-  location: string
-  amount: number
-  proposerId: string
+  title: string;
+  description: string;
+  location: string;
+  amount: number;
+  proposerId: string;
 }
 
 export interface VoteDto {
-  userId: string
-  support: boolean
+  userId: string;
+  support: boolean;
 }
 
 @Injectable()
 export class DaoService {
-  private readonly proposals: Proposal[] = []
+  private readonly proposals: Proposal[] = [];
 
   async findAll(): Promise<Proposal[]> {
-    return this.proposals
+    return this.proposals;
   }
 
   async findOne(id: string): Promise<Proposal | null> {
-    return this.proposals.find(proposal => proposal.id === id) || null
+    return this.proposals.find((proposal) => proposal.id === id) || null;
   }
 
   async create(createProposalDto: CreateProposalDto): Promise<Proposal> {
@@ -40,36 +40,41 @@ export class DaoService {
       endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       createdAt: new Date(),
       updatedAt: new Date(),
-    }
+    };
 
-    this.proposals.push(proposal)
-    return proposal
+    this.proposals.push(proposal);
+    return proposal;
   }
 
-  async vote(id: string, userId: string, support: boolean): Promise<Proposal | null> {
-    const proposal = this.proposals.find(p => p.id === id)
+  async vote(
+    id: string,
+    userId: string,
+    support: boolean,
+  ): Promise<Proposal | null> {
+    const proposal = this.proposals.find((p) => p.id === id);
     if (proposal && proposal.status === 'active') {
       if (support) {
-        proposal.votesFor++
+        proposal.votesFor++;
       } else {
-        proposal.votesAgainst++
+        proposal.votesAgainst++;
       }
-      proposal.updatedAt = new Date()
+      proposal.updatedAt = new Date();
     }
-    return proposal || null
+    return proposal || null;
   }
 
   async finalize(id: string): Promise<Proposal | null> {
-    const proposal = this.proposals.find(p => p.id === id)
+    const proposal = this.proposals.find((p) => p.id === id);
     if (proposal) {
-      const totalVotes = proposal.votesFor + proposal.votesAgainst
-      proposal.status = proposal.votesFor > proposal.votesAgainst ? 'passed' : 'rejected'
-      proposal.updatedAt = new Date()
+      const totalVotes = proposal.votesFor + proposal.votesAgainst;
+      proposal.status =
+        proposal.votesFor > proposal.votesAgainst ? 'passed' : 'rejected';
+      proposal.updatedAt = new Date();
     }
-    return proposal || null
+    return proposal || null;
   }
 
   async getActiveProposals(): Promise<Proposal[]> {
-    return this.proposals.filter(proposal => proposal.status === 'active')
+    return this.proposals.filter((proposal) => proposal.status === 'active');
   }
 }

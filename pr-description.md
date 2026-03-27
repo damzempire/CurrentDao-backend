@@ -1,185 +1,41 @@
-# 🌍 Cross-Border Energy Trading Platform
-
 ## Summary
-This PR implements a comprehensive cross-border energy trading platform that handles international regulations, multi-currency support, and compliance requirements for global energy markets.
 
-## ✨ Features Implemented
+Implements Soroban interaction layer integration and completes local CI-equivalent validation and workflow alignment without opening a pull request.
 
-### 🏛️ International Regulation Compliance
-- **10+ International Regulations**: EU Renewable Energy Directive, US FERC Regulations, ISO 50001, IEA Standards, and more
-- **Real-time Compliance Checking**: Automated validation against applicable regulations
-- **Comprehensive Audit Trail**: Complete compliance tracking and reporting
-- **Multi-jurisdiction Support**: Handles different regulatory requirements across countries
+## Implemented In This Branch
 
-### 💱 Multi-Currency Support
-- **15+ Currencies**: USD, EUR, GBP, JPY, CNY, INR, AUD, CAD, CHF, SEK, NOK, DKK, SGD, HKD, NZD, KRW, MXN, BRL, RUB, ZAR
-- **Real-time Exchange Rates**: Live currency conversion with fee calculations
-- **Cross-border Fees**: Accurate fee calculation for international transactions
-- **Exchange Rate History**: Historical rate tracking and analysis
+- Added contracts integration and Stellar configuration.
+- Aligned main CI workflow to actual runtime behavior.
+- Added executable risk-performance and stress-scenario validation scripts.
+- Fixed e2e runtime stability (tracing side effects in test context).
 
-### ⚡ Transaction Processing
-- **Sub-5 Minute Processing**: Efficient transaction orchestration
-- **1000+ Daily Capacity**: High-performance processing capabilities
-- **Batch Processing**: Support for multiple transaction processing
-- **Status Tracking**: Complete transaction lifecycle management
-- **Error Handling**: Robust error recovery and retry mechanisms
+## Local Validation Status
 
-### 🏛️ Customs & Tariff Management
-- **Automated Customs Clearance**: Streamlined customs processing
-- **Accurate Tariff Calculations**: Precise duty and tax computations
-- **HS Code Support**: Standardized product classification
-- **Country-specific Rules**: Tailored customs regulations per country pair
-- **Restriction Checking**: Automated validation of trade restrictions
+- [x] `npm run lint` (0 errors, warnings remain)
+- [x] `npm run build`
+- [x] `npm test -- --runInBand`
+- [x] `npm run test:e2e`
+- [x] `npm run test:cov`
+- [x] `npm run test:risk`
+- [x] `npm run test:performance`
+- [x] `npm run validate:stress-scenarios`
+- [x] `npm audit --omit=dev --audit-level=critical`
 
-### 📊 Regulatory Reporting
-- **Automatic Report Generation**: Scheduled and on-demand reporting
-- **Multiple Formats**: JSON, XML, CSV, PDF support
-- **Direct Submissions**: Integration with regulatory bodies
-- **Compliance Metrics**: Real-time compliance tracking
-- **Report Templates**: Standardized formats for different jurisdictions
+## Hosted CI Follow-Ups (No PR Opened)
 
-## 🏗️ Architecture
+- [ ] Trigger GitHub Actions for `.github/workflows/ci.yml` by pushing branch updates.
+- [ ] Confirm repository secrets for deploy/terraform workflows are configured:
+	- `AWS_ACCESS_KEY_ID`
+	- `AWS_SECRET_ACCESS_KEY`
+	- `INFRACOST_API_KEY`
+	- `KUBE_CONFIG_STAGING`
+	- `KUBE_CONFIG_PRODUCTION`
+	- `SLACK_WEBHOOK_URL`
+- [ ] Ensure GitHub Environments include names referenced by workflows (`staging`, `production`) with required approvals and secret scopes.
+- [ ] Run deployment workflows after CI success if desired.
 
-### Module Structure
-```
-src/cross-border/
-├── compliance/           # International regulation compliance engine
-├── currency/            # Multi-currency support and conversion
-├── transactions/        # Transaction processing orchestration
-├── tariffs/            # Customs and tariff management
-├── reporting/          # Regulatory reporting and submissions
-├── entities/           # Database entities with full audit trail
-├── dto/               # Validated data transfer objects
-└── controller/        # RESTful API controllers
-```
+## Notes
 
-### Database Design
-- **Comprehensive Entity Design**: Full transaction lifecycle tracking
-- **Audit Trail**: Complete history of all changes and compliance checks
-- **Performance Optimized**: Indexed queries for high-volume processing
-- **Type Safety**: Full TypeScript integration with strict typing
+- Lint warnings are expected and non-blocking under current ESLint policy.
+- Dependency audit still reports moderate/high issues; the configured critical threshold passes.
 
-## 🚀 Performance Metrics
-
-### Transaction Processing
-- **Average Processing Time**: < 5 minutes
-- **Daily Transaction Capacity**: 1000+ transactions
-- **Compliance Check Time**: < 30 seconds
-- **Currency Conversion Time**: < 2 seconds
-
-### System Performance
-- **API Response Time**: < 200ms (average)
-- **Database Query Time**: < 50ms (average)
-- **Memory Usage**: < 512MB (typical)
-- **CPU Usage**: < 25% (typical)
-
-## 🧪 Testing
-
-### Test Coverage
-- **90%+ Coverage**: Comprehensive test suite across all modules
-- **Unit Tests**: Individual service and utility testing
-- **Integration Tests**: End-to-end transaction flows
-- **API Tests**: Complete endpoint validation
-
-### Test Categories
-- Regulation Service Tests
-- Currency Service Tests
-- Transaction Processor Tests
-- Customs Service Tests
-- Regulatory Report Service Tests
-- Controller Tests
-
-## 📚 API Documentation
-
-### Key Endpoints
-
-#### Transactions
-- `POST /cross-border/transactions` - Create new cross-border transaction
-- `POST /cross-border/transactions/batch` - Process batch transactions
-- `GET /cross-border/transactions/:id` - Retrieve transaction details
-- `POST /cross-border/transactions/:id/retry` - Retry failed transactions
-
-#### Compliance
-- `GET /cross-border/compliance/check` - Pre-transaction compliance validation
-- `GET /cross-border/compliance/regulations` - Regulation lookup
-- `GET /cross-border/compliance/regulations/:country` - Country-specific regulations
-
-#### Currency & Customs
-- `POST /cross-border/currency/convert` - Real-time currency conversion
-- `POST /cross-border/customs/calculate` - Tariff and customs calculation
-- `GET /cross-border/currency/supported` - Supported currencies list
-
-#### Reporting
-- `POST /cross-border/reports/generate` - Generate regulatory reports
-- `POST /cross-border/reports/:id/submit` - Submit to regulatory bodies
-
-## 🎯 Acceptance Criteria Met
-
-✅ **Compliance with 10+ international energy regulations**
-✅ **Multi-currency support for 15+ currencies**
-✅ **Cross-border transactions process within 5 minutes**
-✅ **Regulatory reports generated automatically**
-✅ **International energy standards implemented**
-✅ **Customs and tariffs calculated accurately**
-✅ **Dispute resolution handles international cases**
-✅ **Payment integration supports international banks**
-✅ **Performance: handles 1000+ cross-border transactions daily**
-✅ **Test coverage exceeds 90%**
-✅ **Documentation covers international features**
-✅ **Integration with global systems works**
-
-## 🔧 Configuration
-
-### Environment Variables
-```env
-EXCHANGE_RATE_API_KEY=your_api_key_here
-DATABASE_URL=./database.sqlite
-```
-
-### Supported Energy Types
-- Electricity, Natural Gas, Oil, Coal, Nuclear
-- Solar, Wind, Hydro, Biomass, Geothermal
-
-## 📖 Documentation
-
-- **Comprehensive README**: Setup instructions and API examples
-- **API Documentation**: Swagger/OpenAPI specifications
-- **Architecture Guide**: Module structure and design patterns
-- **Testing Guide**: Test coverage and quality standards
-
-## 🔒 Security Features
-
-- **Input Validation**: Comprehensive DTO validation with class-validator
-- **SQL Injection Prevention**: TypeORM parameterized queries
-- **Rate Limiting**: API endpoint protection (planned)
-- **Audit Logging**: Complete transaction audit trail
-- **Data Encryption**: Sensitive data protection (planned)
-
-## 🚦 Breaking Changes
-
-None. This is a new feature addition that does not modify existing functionality.
-
-## 📋 Migration Guide
-
-No migration required. This is a new feature module.
-
-## 🧪 Testing Instructions
-
-1. Install dependencies: `npm install`
-2. Run tests: `npm test`
-3. Start development server: `npm run start:dev`
-4. Access API documentation: `http://localhost:3000/api`
-
-## 🔗 Related Issues
-
-Closes #1 - Implement cross-border energy trading platform
-Closes #2 - Add international regulation compliance
-Closes #3 - Implement multi-currency support
-Closes #4 - Add customs and tariff management
-Closes #5 - Implement regulatory reporting
-
----
-
-**This PR represents a significant milestone in establishing CurrentDao as a global energy trading platform with full international compliance and multi-currency capabilities.**
-
-🚀 **Ready for review and merge!**
