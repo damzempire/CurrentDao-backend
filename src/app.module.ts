@@ -1,3 +1,4 @@
+import { AssetModule } from './assets/asset.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -19,6 +20,7 @@ import { ApiGatewayModule } from './gateway/api-gateway.module';
 
 @Module({
   imports: [
+    AssetModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, stellarConfig],
