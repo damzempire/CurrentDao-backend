@@ -25,6 +25,7 @@ import { FraudDetectionModule } from './fraud/fraud-detection.module';
 import { PredictiveBalancingModule } from './balancing/predictive-balancing.module';
 import { SyncModule } from './sync/sync.module';
 import { LoggingModule } from './logging/logging.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -48,12 +49,9 @@ import { LoggingModule } from './logging/logging.module';
     PredictiveBalancingModule,
     SyncModule,
     LoggingModule,
+    SettingsModule,
   ],
   controllers: [AppController, HealthController],
-  providers: [
-    AppService,
-    ResponseInterceptor,
-    HttpExceptionFilter,
-  ],
+  providers: [AppService, ResponseInterceptor, HttpExceptionFilter],
 })
-export class AppModule { }
+export class AppModule {}
