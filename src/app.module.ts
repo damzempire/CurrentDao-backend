@@ -31,6 +31,9 @@ import { PredictiveBalancingModule } from './balancing/predictive-balancing.modu
 import { SyncModule } from './sync/sync.module';
 import { LoggingModule } from './logging/logging.module';
 import { SettingsModule } from './settings/settings.module';
+import { CurrencyModule } from './currency/currency.module';
+import { BIModule } from './bi/bi.module';
+import { AdvancedAuthModule } from './advanced-auth/advanced-auth.module';
 
 @Module({
   imports: [
@@ -55,8 +58,11 @@ import { SettingsModule } from './settings/settings.module';
     SyncModule,
     LoggingModule,
     SettingsModule,
+    CurrencyModule,
+    BIModule,
+    AdvancedAuthModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, ResponseInterceptor, HttpExceptionFilter],
 })
-export class AppModule {}
+export class AppModule { }
