@@ -30,6 +30,8 @@ import { FraudDetectionModule } from './fraud/fraud-detection.module';
 import { PredictiveBalancingModule } from './balancing/predictive-balancing.module';
 import { SyncModule } from './sync/sync.module';
 import { LoggingModule } from './logging/logging.module';
+import { CurrencyModule } from './currency/currency.module';
+import { BIModule } from './bi/bi.module';
 import { SettingsModule } from './settings/settings.module';
 
 @Module({
@@ -54,9 +56,11 @@ import { SettingsModule } from './settings/settings.module';
     PredictiveBalancingModule,
     SyncModule,
     LoggingModule,
+    CurrencyModule,
+    BIModule,
     SettingsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, ResponseInterceptor, HttpExceptionFilter],
 })
-export class AppModule {}
+export class AppModule { }
