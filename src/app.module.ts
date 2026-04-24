@@ -46,6 +46,8 @@ import { MarketDataModule } from './market-data/market-data.module';
 import { ResearchPlatformModule } from './research/research-platform.module';
 import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predictive.module';
 import { MicrogridModule } from './microgrid/microgrid.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
+import { PricingModule } from './pricing/pricing.module';
 
 @Module({
   imports: [
@@ -81,8 +83,8 @@ import { MicrogridModule } from './microgrid/microgrid.module';
     BIModule,
     SettingsModule,
     PricingModule,
-    CurrencyModule,
     MicrogridModule,
+    PortfolioModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
