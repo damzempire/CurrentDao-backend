@@ -1,51 +1,29 @@
-import { Module, Global, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { SecurityHeadersService } from './headers/security-headers.service';
-import { WafService } from './waf/waf.service';
-import { DdosProtectionService } from './ddos/ddos-protection.service';
-import { SecurityMonitorService } from './monitoring/security-monitor.service';
-import { SecurityMiddleware } from './middleware/security.middleware';
-import { AnomalyDetectorService } from './detectors/anomaly.detector';
-import { FraudDetectorService } from './detectors/fraud.detector';
-import { SecurityAlertService } from './alerts/security-alert.service';
-import { IncidentResponseService } from './response/incident-response.service';
-import { SecurityEvent } from './entities/security-event.entity';
-import { SecurityController } from './security.controller';
+import { Module } from '@nestjs/common';
+import { AdvancedSecurityController } from './advanced-security.controller';
+import { ZeroTrustService } from './zero-trust/zero-trust.service';
+import { BehavioralBiometricService } from './biometric/behavioral-biometric.service';
+import { QuantumEncryptionService } from './encryption/quantum-encryption.service';
+import { SecurityOrchestratorService } from './orchestration/security-orchestrator.service';
+import { ThreatIntelligenceService } from './threat-intel/threat-intelligence.service';
+import { PenetrationTestingService } from './testing/penetration-testing.service';
+import { ZeroKnowledgeService } from './zero-knowledge/zero-knowledge.service';
 
-@Global()
 @Module({
-  imports: [
-    ThrottlerModule.forRootAsync({
-      useClass: DdosProtectionService,
-    }),
-    TypeOrmModule.forFeature([SecurityEvent]),
-  ],
-  controllers: [SecurityController],
+  controllers: [AdvancedSecurityController],
   providers: [
-    SecurityHeadersService,
-    WafService,
-    DdosProtectionService,
-    SecurityMonitorService,
-    SecurityMiddleware,
-    AnomalyDetectorService,
-    FraudDetectorService,
-    SecurityAlertService,
-    IncidentResponseService,
+    ZeroTrustService,
+    BehavioralBiometricService,
+    QuantumEncryptionService,
+    SecurityOrchestratorService,
+    ThreatIntelligenceService,
+    PenetrationTestingService,
+    ZeroKnowledgeService,
   ],
   exports: [
-    SecurityHeadersService,
-    WafService,
-    DdosProtectionService,
-    SecurityMonitorService,
-    AnomalyDetectorService,
-    FraudDetectorService,
-    SecurityAlertService,
-    IncidentResponseService,
+    ZeroTrustService,
+    QuantumEncryptionService,
+    ThreatIntelligenceService,
+    ZeroKnowledgeService,
   ],
 })
-export class SecurityModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(SecurityMiddleware).forRoutes('*');
-  }
-}
+export class SecurityModule {}

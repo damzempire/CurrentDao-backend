@@ -1,10 +1,6 @@
-import {
-  Injectable,
-  Logger,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
-enum CircuitBreakerState {
+enum CircuitState {
   CLOSED,
   OPEN,
   HALF_OPEN,
@@ -13,50 +9,62 @@ enum CircuitBreakerState {
 @Injectable()
 export class CircuitBreakerService {
   private readonly logger = new Logger(CircuitBreakerService.name);
-  private state: CircuitBreakerState = CircuitBreakerState.CLOSED;
-  private failureCount: number = 0;
-  private readonly threshold: number = 5;
-  private readonly timeout: number = 30000; // 30 seconds
+  private readonly states = new Map<string, CircuitState>();
+  private readonly failureCounts = new Map<string, number>();
+  private readonly lastFailureTimes = new Map<string, number>();
 
-  /**
-   * Checks if the circuit is open. If so, it throws an error.
-   */
-  async checkCircuit(): Promise<void> {
-    if (this.state === CircuitBreakerState.OPEN) {
-      throw new InternalServerErrorException(
-        'Circuit is open, please try again later',
-      );
+  private readonly failureThreshold = 5;
+  private readonly resetTimeout = 30000; // 30 seconds
+
+  async execute<T>(serviceName: string, action: () => Promise<T>): Promise<T> {
+    const state = this.getState(serviceName);
+
+    if (state === CircuitState.OPEN) {
+      if (this.shouldAttemptReset(serviceName)) {
+        this.setState(serviceName, CircuitState.HALF_OPEN);
+      } else {
+        throw new Error(`Circuit breaker is OPEN for service: ${serviceName}`);
+      }
+    }
+
+    try {
+      const result = await action();
+      this.handleSuccess(serviceName);
+      return result;
+    } catch (error) {
+      this.handleFailure(serviceName);
+      throw error;
     }
   }
 
-  /**
-   * Logs a successful request and resets the failure count.
-   */
-  async reportSuccess(): Promise<void> {
-    this.failureCount = 0;
-    this.state = CircuitBreakerState.CLOSED;
-    this.logger.debug('Circuit Breaker status: CLOSED');
+  private getState(serviceName: string): CircuitState {
+    return this.states.get(serviceName) || CircuitState.CLOSED;
   }
 
-  /**
-   * Logs a failed request and increments the failure count.
-   * If the failure count exceeds the threshold, the circuit is opened.
-   */
-  async reportFailure(): Promise<void> {
-    this.failureCount++;
-    this.logger.error(
-      `Circuit Breaker status: FAILURE (Count: ${this.failureCount}/${this.threshold})`,
-    );
+  private setState(serviceName: string, state: CircuitState) {
+    this.logger.log(`Circuit breaker for ${serviceName} changed to ${CircuitState[state]}`);
+    this.states.set(serviceName, state);
+  }
 
-    if (this.failureCount >= this.threshold) {
-      this.state = CircuitBreakerState.OPEN;
-      this.logger.error('Circuit Breaker status: OPEN');
+  private shouldAttemptReset(serviceName: string): boolean {
+    const lastFailureTime = this.lastFailureTimes.get(serviceName) || 0;
+    return Date.now() - lastFailureTime > this.resetTimeout;
+  }
 
-      // Reset state to HALF_OPEN after timeout
-      setTimeout(() => {
-        this.state = CircuitBreakerState.HALF_OPEN;
-        this.logger.warn('Circuit Breaker status: HALF_OPEN');
-      }, this.timeout);
+  private handleSuccess(serviceName: string) {
+    this.failureCounts.set(serviceName, 0);
+    if (this.getState(serviceName) === CircuitState.HALF_OPEN) {
+      this.setState(serviceName, CircuitState.CLOSED);
+    }
+  }
+
+  private handleFailure(serviceName: string) {
+    const count = (this.failureCounts.get(serviceName) || 0) + 1;
+    this.failureCounts.set(serviceName, count);
+    this.lastFailureTimes.set(serviceName, Date.now());
+
+    if (count >= this.failureThreshold) {
+      this.setState(serviceName, CircuitState.OPEN);
     }
   }
 }
