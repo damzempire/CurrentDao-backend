@@ -45,6 +45,7 @@ import { MarketSimulationModule } from './market-simulation/market-simulation.mo
 import { MarketDataModule } from './market-data/market-data.module';
 import { ResearchPlatformModule } from './research/research-platform.module';
 import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predictive.module';
+import { MicrogridModule } from './microgrid/microgrid.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predict
     SettingsModule,
     PricingModule,
     CurrencyModule,
+    MicrogridModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
