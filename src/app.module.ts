@@ -38,6 +38,10 @@ import { MarketSimulationModule } from './market-simulation/market-simulation.mo
 import { MarketDataModule } from './market-data/market-data.module';
 import { ResearchPlatformModule } from './research/research-platform.module';
 import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predictive.module';
+import { HealthModule } from './health/health.module';
+import { ForecastingModule } from './forecasting/forecasting.module';
+import { PerformanceModule } from './performance/performance.module';
+import { PredictiveModule } from './predictive/predictive.module';
 
 @Module({
   imports: [
@@ -70,8 +74,12 @@ import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predict
     SyncModule,
     LoggingModule,
     SettingsModule,
+    HealthModule,
+    ForecastingModule,
+    PerformanceModule,
+    PredictiveModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController],
   providers: [AppService, ResponseInterceptor, HttpExceptionFilter],
 })
 export class AppModule {}
