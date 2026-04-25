@@ -16,6 +16,10 @@ import { AuthModule } from './auth/auth.module';
 import { CrossBorderModule } from './cross-border/cross-border.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 
+// Import new location and global energy modules
+import { LocationModule } from './location/location.module';
+import { GlobalEnergyModule } from './global-energy/global-energy.module';
+
 // Import existing modules
 import { PricingModule } from './pricing/pricing.module';
 import { SecurityHeadersService } from './security/headers/security-headers.service';
@@ -67,6 +71,10 @@ import { OrderBook } from './matching/entities/order-book.entity';
     // Import new cross-border and webhook modules
     CrossBorderModule,
     WebhooksModule,
+    
+    // Import new location and global energy modules
+    LocationModule,
+    GlobalEnergyModule,
     
     // Import existing pricing module for integration
     PricingModule,
