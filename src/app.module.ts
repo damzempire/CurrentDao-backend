@@ -1,85 +1,97 @@
-import { AssetModule } from './assets/asset.module';
-import { Module, NestMiddleware, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
-import { ConfigModule, ConfigType } from '@nestjs/config';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
-import databaseConfig from './config/database.config';
-import stellarConfig from './config/stellar.config';
-import { AppController } from './app.controller';
-import { HealthController } from './health.controller';
-import { AppService } from './app.service';
-import { SecurityMiddleware } from './middleware/security.middleware';
-import { helmetMiddleware, validateSecurityConfig } from './config/security.config';
-import { corsConfig, validateCorsConfig } from './config/cors.config';
-import { MarketForecastingModule } from './forecasting/market-forecasting.module';
-import { RiskManagementModule } from './risk/risk-management.module';
+import { ConfigModule } from '@nestjs/config';
+import { TerminusModule } from '@nestjs/terminus';
+
+// Import the new high-frequency matching module
+import { HighFrequencyMatchingModule } from './matching/high-frequency-matching.module';
+
+// Import new settlement and auth modules
+import { SettlementModule } from './settlement/settlement.module';
+import { AuthModule } from './auth/auth.module';
+
+// Import new cross-border and webhook modules
 import { CrossBorderModule } from './cross-border/cross-border.module';
-import { SecurityModule } from './security/security.module';
-import { ApmModule } from './apm/apm.module';
-import { TracingModule } from './tracing/tracing.module';
-import { ShardingModule } from './database/sharding/sharding.module';
-import { ContractsModule } from './contracts/contracts.module';
-import { ApiGatewayModule } from './gateway/api-gateway.module';
-import { MonitoringModule } from './monitoring/monitoring.module';
-import { SentimentModule } from './sentiment/sentiment.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+
+// Import new location and global energy modules
+import { LocationModule } from './location/location.module';
+import { GlobalEnergyModule } from './global-energy/global-energy.module';
+
+// Import existing modules
+import { PricingModule } from './pricing/pricing.module';
+import { SecurityHeadersService } from './security/headers/security-headers.service';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { ValidationExceptionFilter } from './common/filters/validation.filter';
-import { ValidationPipe } from './common/pipes/validation.pipe';
-import { FraudDetectionModule } from './fraud/fraud-detection.module';
-import { PredictiveBalancingModule } from './balancing/predictive-balancing.module';
-import { SyncModule } from './sync/sync.module';
-import { LoggingModule } from './logging/logging.module';
-import { SettingsModule } from './settings/settings.module';
-import { ErrorHandlingModule } from './error-handling/error-handling.module';
-import { ComplianceModule } from './compliance/compliance.module';
-import { CacheModule } from './cache/cache.module';
-import { MarketSimulationModule } from './market-simulation/market-simulation.module';
-import { MarketDataModule } from './market-data/market-data.module';
-import { ResearchPlatformModule } from './research/research-platform.module';
-import { AdvancedPredictiveModule } from './advanced-predictive/advanced-predictive.module';
-import { HealthModule } from './health/health.module';
-import { ForecastingModule } from './forecasting/forecasting.module';
-import { PerformanceModule } from './performance/performance.module';
-import { PredictiveModule } from './predictive/predictive.module';
+import { HealthController } from './health.controller';
+
+// Import entities for the matching system
+import { Order } from './matching/entities/order.entity';
+import { Trade } from './matching/entities/trade.entity';
+import { OrderBook } from './matching/entities/order-book.entity';
 
 @Module({
   imports: [
-    AssetModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, stellarConfig],
     }),
+    
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 3306,
+      username: process.env.DB_USERNAME || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_DATABASE || 'currentdao',
+      entities: [Order, Trade, OrderBook],
+      synchronize: process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV === 'development',
+    }),
+    
+    TypeOrmModule.forFeature([Order, Trade, OrderBook]),
+    
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
+    
     ScheduleModule.forRoot(),
-    ErrorHandlingModule,
-    CacheModule,
-    ComplianceModule,
-    MarketSimulationModule,
-    MarketDataModule,
-    ResearchPlatformModule,
-    AdvancedPredictiveModule,
-    SecurityModule,
-    ApmModule,
-    TracingModule,
-    ShardingModule,
-    MarketForecastingModule,
-    RiskManagementModule,
+    
+    TerminusModule,
+    
+    // Import the new high-frequency matching module
+    HighFrequencyMatchingModule,
+    
+    // Import new settlement and auth modules
+    SettlementModule,
+    AuthModule,
+    
+    // Import new cross-border and webhook modules
     CrossBorderModule,
-    ContractsModule,
-    ApiGatewayModule,
-    MonitoringModule,
-    SentimentModule,
-    FraudDetectionModule,
-    PredictiveBalancingModule,
-    SyncModule,
-    LoggingModule,
-    SettingsModule,
-    HealthModule,
-    ForecastingModule,
-    PerformanceModule,
-    PredictiveModule,
+    WebhooksModule,
+    
+    // Import new location and global energy modules
+    LocationModule,
+    GlobalEnergyModule,
+    
+    // Import existing pricing module for integration
+    PricingModule,
+    
+    // Other existing modules can be imported here as needed
   ],
-  controllers: [AppController],
-  providers: [AppService, ResponseInterceptor, HttpExceptionFilter],
+  controllers: [HealthController],
+  providers: [
+    SecurityHeadersService,
+    ResponseInterceptor,
+    HttpExceptionFilter,
+  ],
+  exports: [
+    HighFrequencyMatchingModule,
+    SecurityHeadersService,
+    ResponseInterceptor,
+    HttpExceptionFilter,
+  ],
 })
 export class AppModule {}
